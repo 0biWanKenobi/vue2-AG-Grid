@@ -84,8 +84,7 @@ export default {
           this.renameColumn(column.colId, value)
         },
         onAddParentHeader: (params) => {
-          if (params.column.getParent()) this.setParentLabel(params)
-          else this.addParent(params)
+          this.addParent(params)
         },
         onAddHeader: ({ name, column }) => {
           const isChild = this.isChildColumn(column)
@@ -143,21 +142,9 @@ export default {
       this.columnDefs = mapHeaderSet(this.gridApi.getColumnDefs())
     },
     addParent({ name, column }) {
-      const colDef = { ...column.getColDef() }
-      delete colDef.field
-      delete colDef.colId
-      const parentDef = {
-        headerName: name,
-        children: [colDef],
-      }
-      const colIndex = this.columnDefs.findIndex((c) => c.field == column.colId)
-      this.columnDefs.splice(colIndex, 1, parentDef)
-    },
-    setParentLabel({ name, column }) {
-      const colDef = column.getColDef()
-      const colIndex = this.columnDefs.findIndex((c) => c.field == column.colId)
-
       let columnDefs = mapHeaderSet(this.gridApi.getColumnDefs())
+      const colDef = column.getColDef()
+      const colIndex = columnDefs.findIndex((c) => c.field == column.colId)
 
       const parentDef = {
         headerName: name,
