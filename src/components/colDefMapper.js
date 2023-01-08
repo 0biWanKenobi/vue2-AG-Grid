@@ -9,7 +9,6 @@ export const mapFullColDefToLean = (colDef) => {
 export const mapFullColGroupDefToLean = (colGroupDef) => {
   const leanDef = {
     headerName: colGroupDef.headerName,
-    groupId: colGroupDef.groupId,
   }
   if (!colGroupDef.children) return leanDef
   leanDef.children = colGroupDef.children.map((c) => {

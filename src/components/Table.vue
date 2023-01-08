@@ -157,9 +157,10 @@ export default {
       const colDef = column.getColDef()
       const colIndex = this.columnDefs.findIndex((c) => c.field == column.colId)
 
-      this.columnDefs.splice(colIndex, 1, {
+      let columnDefs = mapHeaderSet(this.gridApi.getColumnDefs())
+
+      const parentDef = {
         headerName: name,
-        groupId: column.getParent().getGroupId(),
         children: [
           {
             headerName: colDef.headerName,
@@ -167,7 +168,11 @@ export default {
             sortable: colDef.sortable,
           },
         ],
-      })
+      }
+
+      columnDefs.splice(colIndex, 1, parentDef)
+      this.columnDefs = columnDefs
+      // this.gridApi.setColumnDefs(columnDefs)
     },
     addColumnToGroup({ groupId, column }) {
       const groupDef = this.colApi.getColumnGroup(groupId).getColGroupDef()
