@@ -1,0 +1,14 @@
+.ag-theme-alpine {
+  &.custom-theme {
+    --ag-header-column-separator-display: block;
+    --ag-header-column-separator-height: 50%;
+    --ag-header-column-separator-width: 1px;
+    --ag-header-column-separator-color: var(--ag-row-border-color);
+
+    --ag-cell-horizontal-border: 1px solid var(--ag-row-border-color);
+  }
+
+  .ag-header-group-cell-label {
+    justify-content: center;
+  }
+}

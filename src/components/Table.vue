@@ -1,0 +1,230 @@
+<template>
+  <v-container>
+    <v-app-bar class="mb-4">
+      <v-btn outlined class="mr-2">New table</v-btn>
+      <v-btn outlined class="mr-2">Add Column</v-btn>
+      <v-btn outlined class="mr-2">Advanced Editor</v-btn>
+    </v-app-bar>
+    <ag-grid-vue
+      class="ag-theme-alpine custom-theme"
+      style="width: 100%; height: 300px"
+      @grid-ready="onGridReady"
+      :columnDefs="columnDefs"
+      :defaultColDef="defaultColDef"
+      :defaultColGroupDef="defaultColGroupDef"
+      :rowData="rowData"
+    >
+    </ag-grid-vue>
+    <json-editor class="my-4" v-model="headerJsonDef"></json-editor>
+    <v-btn @click="setColDefs()" class="mr-2">Set Headers</v-btn>
+    <v-btn @click="prettyPrint()">Pretty Print</v-btn>
+  </v-container>
+</template>
+
+<script>
+import { AgGridVue } from 'ag-grid-vue'
+import { sync, commit } from 'vuex-pathify'
+import JSON5 from 'json5'
+
+import CustomHeader from './header/Header.vue'
+import CustomHeaderGroup from './header/HeaderGroup.vue'
+import JsonEditor from './JsonEditor.vue'
+import { mapHeaderSet } from './colDefMapper'
+
+export default {
+  data() {
+    return {
+      defaultColDef: null,
+      defaultColGroupDef: null,
+      gridApi: null,
+      colApi: null,
+      rowData: null,
+      headerJsonDef: '',
+    }
+  },
+  computed: {
+    shouldPrettyPrint: sync('table/shouldPrettyPrint'),
+    columnDefs: sync('table/columnDefs'),
+  },
+  components: {
+    AgGridVue,
+    agColumnHeader: CustomHeader,
+    CustomHeaderGroup,
+    JsonEditor,
+  },
+  beforeMount() {
+    this.defaultColGroupDef = {
+      headerGroupComponent: 'CustomHeaderGroup',
+      headerGroupComponentParams: {
+        onRename: this.renameGroup,
+        onAddParent: this.addGrandParent,
+        onDelete: ({ groupId }) => {
+          commit('table/DELETE_GROUP', groupId)
+        },
+      },
+    }
+    this.defaultColDef = {
+      flex: 1,
+      editable: true,
+      filter: true,
+      headerComponentParams: {
+        enableMenu: true,
+        getHeaderGroups: this.getHeaderGroups,
+        onAddToGroup: this.addColumnToGroup,
+        onDeleteHeader: (params) => {
+          const { column } = params
+          const isChild = this.isChildColumn(column)
+          //commit('table/DELETE_COLUMN', column.colId)
+          if (isChild) {
+            commit('table/DELETE_CHILD_COLUMN', { parent: column.parent, colId: column.colId })
+            // this.deleteChildColumn(column.parent, column.colId)
+          } else this.deleteColumn(column.colId)
+        },
+        onRenameHeader: ({ value, column }) => {
+          this.renameColumn(column.colId, value)
+        },
+        onAddParentHeader: (params) => {
+          if (params.column.getParent()) this.setParentLabel(params)
+          else this.addParent(params)
+        },
+        onAddHeader: ({ name, column }) => {
+          const isChild = this.isChildColumn(column)
+          if (isChild) {
+            this.addChildColumn(column.parent, column.colId, name)
+          } else this.addColumn(column.colId, name)
+        },
+      },
+    }
+
+    this.rowData = [
+      { make: 'Toyota', name: 'Celica', spec: 'GT', price: 35000 },
+      { make: 'Ford', name: 'Mondeo', spec: 'Coupe', price: 32000 },
+      { make: 'Porsche', name: 'Boxter', spec: '4S', price: 72000 },
+    ]
+  },
+  methods: {
+    setColDefs() {
+      this.gridApi.setColumnDefs(JSON5.parse(this.headerJsonDef))
+    },
+    prettyPrint() {
+      this.shouldPrettyPrint = true
+    },
+    isChildColumn(column) {
+      const parent = column.getParent()
+      return parent && !!column.parent.getColGroupDef().children
+    },
+    getHeaderGroups() {
+      return this.colApi
+        ?.getAllDisplayedColumnGroups()
+        ?.filter((cg) => cg.getColGroupDef && cg.getColGroupDef().children)
+        .map((cg) => ({ groupId: cg.groupId, name: cg.getColGroupDef().headerName }))
+    },
+    renameGroup({ group, newName }) {
+      const groupDef = group.getColGroupDef()
+      this.$set(groupDef, 'headerName', newName)
+      this.columnDefs = mapHeaderSet(this.gridApi.getColumnDefs())
+    },
+    addGrandParent({ name, group }) {
+      let groupDef = group.getColGroupDef()
+      const children = [
+        {
+          headerName: groupDef.headerName,
+          children: [...groupDef.children],
+        },
+      ]
+
+      groupDef.children.length && groupDef.children.splice(0, groupDef.children.length)
+      Object.keys(groupDef).forEach((key) => key != 'children' && delete groupDef[key])
+      groupDef.children.splice(0, 0, ...children)
+      this.gridApi.setColumnDefs(this.columnDefs)
+      groupDef = this.colApi.getColumnGroup(group.groupId).getColGroupDef()
+      this.$set(groupDef, 'headerName', name)
+      // need full reassignment
+      this.columnDefs = mapHeaderSet(this.gridApi.getColumnDefs())
+    },
+    addParent({ name, column }) {
+      const colDef = { ...column.getColDef() }
+      delete colDef.field
+      delete colDef.colId
+      const parentDef = {
+        headerName: name,
+        children: [colDef],
+      }
+      const colIndex = this.columnDefs.findIndex((c) => c.field == column.colId)
+      this.columnDefs.splice(colIndex, 1, parentDef)
+    },
+    setParentLabel({ name, column }) {
+      const colDef = column.getColDef()
+      const colIndex = this.columnDefs.findIndex((c) => c.field == column.colId)
+
+      this.columnDefs.splice(colIndex, 1, {
+        headerName: name,
+        groupId: column.getParent().getGroupId(),
+        children: [
+          {
+            headerName: colDef.headerName,
+            field: colDef.field,
+            sortable: colDef.sortable,
+          },
+        ],
+      })
+    },
+    addColumnToGroup({ groupId, column }) {
+      const groupDef = this.colApi.getColumnGroup(groupId).getColGroupDef()
+      groupDef.children.splice(0, 0, { ...column.getColDef() })
+
+      this.gridApi.setColumnDefs(this.columnDefs)
+      this.deleteColumn(column.colId)
+      this.gridApi.refreshHeader()
+      // this.gridApi.setColumnDefs(this.columnDefs)
+    },
+    renameColumn(colId, newName) {
+      const col = this.gridApi.getColumnDef(colId)
+      this.$set(col, 'headerName', newName)
+      // sync defs in gridApi and in component, prevent issues
+      // when deleting renamed headers
+      this.columnDefs = mapHeaderSet(this.gridApi.getColumnDefs())
+    },
+    addColumn(colId, name) {
+      const startIndex = this.columnDefs.findIndex((c) => c.field == colId)
+
+      this.columnDefs.splice(startIndex + 1, 0, {
+        headerName: name,
+        field: name.replaceAll(' ', '_').toLowerCase(),
+      })
+    },
+    deleteColumn(colId) {
+      const deletedIndex = this.columnDefs.findIndex((c) => c.field == colId)
+      this.columnDefs.splice(deletedIndex, 1)
+      // we could store the deleted column to provide an undo functionality
+    },
+    deleteChildColumn(parent, colId) {
+      const children = parent.getColGroupDef().children
+      const deletedIndex = children.findIndex((c) => c.field == colId)
+      children.splice(deletedIndex, 1)
+      this.gridApi.setColumnDefs(this.columnDefs)
+      if (children.length == 0) {
+        this.columnDefs = mapHeaderSet(this.gridApi.getColumnDefs())
+      }
+      this.gridApi.sizeColumnsToFit()
+    },
+    addChildColumn(parent, colId, name) {
+      const children = parent.getColGroupDef().children
+      const currIndex = children.findIndex((c) => c.field == colId)
+      const newCol = {
+        headerName: name,
+        field: name.replaceAll(' ', '_').toLowerCase(),
+      }
+      children.splice(currIndex + 1, 0, newCol)
+      this.gridApi.setColumnDefs(this.columnDefs)
+    },
+    onGridReady(params) {
+      this.gridApi = params.api
+      this.colApi = params.columnApi
+    },
+  },
+}
+</script>
+<style lang="scss">
+@import './table.scss';
+</style>
