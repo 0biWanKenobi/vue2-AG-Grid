@@ -29,8 +29,10 @@ export default {
       state.columnDefs.splice(deletedIndex, 1)
     },
     DELETE_GROUP(state, groupId) {
-      const deletedIndex = state.columnDefs.findIndex((c) => c.groupId == groupId)
-      state.columnDefs.splice(deletedIndex, 1)
+      const colDefs = state.gridApi.getColumnDefs()
+      const deletedIndex = colDefs.findIndex((c) => c.groupId == groupId)
+      colDefs.splice(deletedIndex, 1)
+      state.columnDefs = mapHeaderSet(colDefs)
     },
     DELETE_CHILD_COLUMN(_, { parent, colId }) {
       const parentDef = parent.getColGroupDef()
@@ -55,7 +57,7 @@ export default {
       groupDef.headerName = newName
       state.columnDefs = mapHeaderSet(state.gridApi.getColumnDefs())
     },
-    SET_GROUP(state, {name, column}){
+    SET_GROUP(state, { name, column }) {
       let columnDefs = mapHeaderSet(state.gridApi.getColumnDefs())
       const colDef = column.getColDef()
       const colIndex = columnDefs.findIndex((c) => c.field == column.colId)
@@ -73,7 +75,7 @@ export default {
 
       columnDefs.splice(colIndex, 1, parentDef)
       state.columnDefs = columnDefs
-    }
+    },
   },
   actions: {
     ...make.actions(state),
