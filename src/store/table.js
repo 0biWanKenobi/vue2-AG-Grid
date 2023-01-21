@@ -1,8 +1,11 @@
 import { make } from 'vuex-pathify'
 import store from './index'
 
+import { mapHeaderSet } from '../components/colDefMapper'
+
 const state = {
   shouldPrettyPrint: false,
+  gridApi: null,
   columnDefs: [
     { headerName: 'Make', field: 'make', sortable: true },
     {
@@ -18,6 +21,9 @@ export default {
   state,
   mutations: {
     ...make.mutations(state),
+    SET_GRID_API(state, api) {
+      state.gridApi = api
+    },
     DELETE_COLUMN(state, colId) {
       const deletedIndex = state.columnDefs.findIndex((c) => c.field == colId)
       state.columnDefs.splice(deletedIndex, 1)
@@ -36,6 +42,13 @@ export default {
       // for example by allowing to delete the parent directly and disallowing to delete
       // the last children
     },
+    RENAME_COLUMN(state, {newName, colId}) {
+      const col = state.gridApi.getColumnDef(colId)
+      col.headerName = newName;
+      // sync defs in gridApi and in component, prevent issues
+      // when deleting renamed headers
+      state.columnDefs = mapHeaderSet(state.gridApi.getColumnDefs())
+    }
   },
   actions: {
     ...make.actions(state),

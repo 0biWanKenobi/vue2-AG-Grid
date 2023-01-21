@@ -74,14 +74,12 @@ export default {
         onDeleteHeader: (params) => {
           const { column } = params
           const isChild = this.isChildColumn(column)
-          //commit('table/DELETE_COLUMN', column.colId)
           if (isChild) {
             commit('table/DELETE_CHILD_COLUMN', { parent: column.parent, colId: column.colId })
-            // this.deleteChildColumn(column.parent, column.colId)
-          } else this.deleteColumn(column.colId)
+          } else commit('table/DELETE_COLUMN', column.colId)
         },
         onRenameHeader: ({ value, column }) => {
-          this.renameColumn(column.colId, value)
+          commit('table/RENAME_COLUMN', { newName: value, colId: column.colId })
         },
         onAddParentHeader: (params) => {
           this.addParent(params)
@@ -166,16 +164,9 @@ export default {
       groupDef.children.splice(0, 0, { ...column.getColDef() })
 
       this.gridApi.setColumnDefs(this.columnDefs)
-      this.deleteColumn(column.colId)
+      commit('table/DELETE_COLUMN', column.colId)
       this.gridApi.refreshHeader()
       // this.gridApi.setColumnDefs(this.columnDefs)
-    },
-    renameColumn(colId, newName) {
-      const col = this.gridApi.getColumnDef(colId)
-      this.$set(col, 'headerName', newName)
-      // sync defs in gridApi and in component, prevent issues
-      // when deleting renamed headers
-      this.columnDefs = mapHeaderSet(this.gridApi.getColumnDefs())
     },
     addColumn(colId, name) {
       const startIndex = this.columnDefs.findIndex((c) => c.field == colId)
@@ -184,11 +175,6 @@ export default {
         headerName: name,
         field: name.replaceAll(' ', '_').toLowerCase(),
       })
-    },
-    deleteColumn(colId) {
-      const deletedIndex = this.columnDefs.findIndex((c) => c.field == colId)
-      this.columnDefs.splice(deletedIndex, 1)
-      // we could store the deleted column to provide an undo functionality
     },
     deleteChildColumn(parent, colId) {
       const children = parent.getColGroupDef().children
@@ -212,6 +198,7 @@ export default {
     },
     onGridReady(params) {
       this.gridApi = params.api
+      commit('table/SET_GRID_API', params.api)
       this.colApi = params.columnApi
     },
   },
