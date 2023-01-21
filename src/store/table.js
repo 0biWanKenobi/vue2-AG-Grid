@@ -28,7 +28,7 @@ export default {
       const deletedIndex = state.columnDefs.findIndex((c) => c.field == colId)
       state.columnDefs.splice(deletedIndex, 1)
     },
-    DELETE_GROUP(state, groupId){
+    DELETE_GROUP(state, groupId) {
       const deletedIndex = state.columnDefs.findIndex((c) => c.groupId == groupId)
       state.columnDefs.splice(deletedIndex, 1)
     },
@@ -42,12 +42,37 @@ export default {
       // for example by allowing to delete the parent directly and disallowing to delete
       // the last children
     },
-    RENAME_COLUMN(state, {newName, colId}) {
+    RENAME_COLUMN(state, { newName, colId }) {
       const col = state.gridApi.getColumnDef(colId)
-      col.headerName = newName;
+      col.headerName = newName
       // sync defs in gridApi and in component, prevent issues
       // when deleting renamed headers
       state.columnDefs = mapHeaderSet(state.gridApi.getColumnDefs())
+    },
+    RENAME_GROUP(state, { newName, group }) {
+      console.log('renaming group')
+      const groupDef = group.getColGroupDef()
+      groupDef.headerName = newName
+      state.columnDefs = mapHeaderSet(state.gridApi.getColumnDefs())
+    },
+    SET_GROUP(state, {name, column}){
+      let columnDefs = mapHeaderSet(state.gridApi.getColumnDefs())
+      const colDef = column.getColDef()
+      const colIndex = columnDefs.findIndex((c) => c.field == column.colId)
+
+      const parentDef = {
+        headerName: name,
+        children: [
+          {
+            headerName: colDef.headerName,
+            field: colDef.field,
+            sortable: colDef.sortable,
+          },
+        ],
+      }
+
+      columnDefs.splice(colIndex, 1, parentDef)
+      state.columnDefs = columnDefs
     }
   },
   actions: {

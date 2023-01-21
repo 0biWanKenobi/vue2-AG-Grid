@@ -56,7 +56,7 @@ export default {
     this.defaultColGroupDef = {
       headerGroupComponent: 'CustomHeaderGroup',
       headerGroupComponentParams: {
-        onRename: this.renameGroup,
+        onRename: (params) => commit('table/RENAME_GROUP', params),
         onAddParent: this.addGrandParent,
         onDelete: ({ groupId }) => {
           commit('table/DELETE_GROUP', groupId)
@@ -81,9 +81,7 @@ export default {
         onRenameHeader: ({ value, column }) => {
           commit('table/RENAME_COLUMN', { newName: value, colId: column.colId })
         },
-        onAddParentHeader: (params) => {
-          this.addParent(params)
-        },
+        onAddParentHeader: (params) => commit('table/SET_GROUP', params),
         onAddHeader: ({ name, column }) => {
           const isChild = this.isChildColumn(column)
           if (isChild) {
@@ -116,11 +114,6 @@ export default {
         ?.filter((cg) => cg.getColGroupDef && cg.getColGroupDef().children)
         .map((cg) => ({ groupId: cg.groupId, name: cg.getColGroupDef().headerName }))
     },
-    renameGroup({ group, newName }) {
-      const groupDef = group.getColGroupDef()
-      this.$set(groupDef, 'headerName', newName)
-      this.columnDefs = mapHeaderSet(this.gridApi.getColumnDefs())
-    },
     addGrandParent({ name, group }) {
       let groupDef = group.getColGroupDef()
       const children = [
@@ -138,26 +131,6 @@ export default {
       this.$set(groupDef, 'headerName', name)
       // need full reassignment
       this.columnDefs = mapHeaderSet(this.gridApi.getColumnDefs())
-    },
-    addParent({ name, column }) {
-      let columnDefs = mapHeaderSet(this.gridApi.getColumnDefs())
-      const colDef = column.getColDef()
-      const colIndex = columnDefs.findIndex((c) => c.field == column.colId)
-
-      const parentDef = {
-        headerName: name,
-        children: [
-          {
-            headerName: colDef.headerName,
-            field: colDef.field,
-            sortable: colDef.sortable,
-          },
-        ],
-      }
-
-      columnDefs.splice(colIndex, 1, parentDef)
-      this.columnDefs = columnDefs
-      // this.gridApi.setColumnDefs(columnDefs)
     },
     addColumnToGroup({ groupId, column }) {
       const groupDef = this.colApi.getColumnGroup(groupId).getColGroupDef()
