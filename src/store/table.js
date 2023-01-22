@@ -76,6 +76,14 @@ export default {
       columnDefs.splice(colIndex, 1, parentDef)
       state.columnDefs = columnDefs
     },
+    ADD_COLUMN(state, {name, colId}) {
+      const startIndex = state.columnDefs.findIndex((c) => c.field == colId)
+
+      state.columnDefs.splice(startIndex + 1, 0, {
+        headerName: name,
+        field: name.replaceAll(' ', '_').toLowerCase(),
+      })
+    }
   },
   actions: {
     ...make.actions(state),
