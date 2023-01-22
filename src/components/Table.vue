@@ -89,7 +89,7 @@ export default {
         onAddHeader: ({ name, column }) => {
           const isChild = this.isChildColumn(column)
           if (isChild) {
-            this.addChildColumn(column.parent, column.colId, name)
+            commit('table/ADD_CHILD_COLUMN', { parent: column.parent, colId: column.colId, name })
           } else commit('table/ADD_COLUMN', { colId: column.colId, name })
         },
         onPrintTree: (column) => this.printColumnTree(column),
@@ -167,16 +167,6 @@ export default {
         this.columnDefs = mapHeaderSet(this.gridApi.getColumnDefs())
       }
       this.gridApi.sizeColumnsToFit()
-    },
-    addChildColumn(parent, colId, name) {
-      const children = parent.getColGroupDef().children
-      const currIndex = children.findIndex((c) => c.field == colId)
-      const newCol = {
-        headerName: name,
-        field: name.replaceAll(' ', '_').toLowerCase(),
-      }
-      children.splice(currIndex + 1, 0, newCol)
-      this.gridApi.setColumnDefs(this.columnDefs)
     },
     onGridReady(params) {
       this.gridApi = params.api

@@ -76,14 +76,24 @@ export default {
       columnDefs.splice(colIndex, 1, parentDef)
       state.columnDefs = columnDefs
     },
-    ADD_COLUMN(state, {name, colId}) {
+    ADD_COLUMN(state, { name, colId }) {
       const startIndex = state.columnDefs.findIndex((c) => c.field == colId)
 
       state.columnDefs.splice(startIndex + 1, 0, {
         headerName: name,
         field: name.replaceAll(' ', '_').toLowerCase(),
       })
-    }
+    },
+    ADD_CHILD_COLUMN(state, { parent, name, colId }) {
+      const children = parent.getColGroupDef().children
+      const currIndex = children.findIndex((c) => c.field == colId)
+      const newCol = {
+        headerName: name,
+        field: name.replaceAll(' ', '_').toLowerCase(),
+      }
+      children.splice(currIndex + 1, 0, newCol)
+      state.gridApi.setColumnDefs(state.columnDefs)
+    },
   },
   actions: {
     ...make.actions(state),
