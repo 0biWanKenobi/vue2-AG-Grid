@@ -63,7 +63,9 @@ export default {
         onPrintTree: (colGroup) => this.printColumnTree(colGroup),
         onAddParent: this.addGrandParent,
         onDelete: ({ groupId }) => {
-          commit('table/DELETE_GROUP', groupId)
+          const groupParent = this.colApi.getColumnGroup(groupId).getParent()
+          if (groupParent) commit('table/DELETE_CHILD_GROUP', groupId)
+          else commit('table/DELETE_GROUP', groupId)
         },
       },
     }
@@ -104,7 +106,7 @@ export default {
   },
   methods: {
     setColDefs() {
-      this.gridApi.setColumnDefs(JSON5.parse(this.headerJsonDef))
+      this.columnDefs = JSON5.parse(this.headerJsonDef)
     },
     prettyPrint() {
       this.shouldPrettyPrint = true
@@ -170,8 +172,8 @@ export default {
     },
     onGridReady(params) {
       this.gridApi = params.api
-      commit('table/SET_GRID_API', params.api)
       this.colApi = params.columnApi
+      commit('table/SET_APIS', { gridApi: params.api, colApi: params.columnApi })
     },
   },
 }

@@ -1,11 +1,12 @@
 import { make } from 'vuex-pathify'
 import store from './index'
 
-import { mapHeaderSet } from '../components/colDefMapper'
+import { mapHeaderSet, mapFullColGroupDefToLean } from '../components/colDefMapper'
 
 const state = {
   shouldPrettyPrint: false,
   gridApi: null,
+  colApi: null,
   columnDefs: [
     { headerName: 'Make', field: 'make', sortable: true },
     {
@@ -21,8 +22,9 @@ export default {
   state,
   mutations: {
     ...make.mutations(state),
-    SET_GRID_API(state, api) {
-      state.gridApi = api
+    SET_APIS(state, { gridApi, colApi }) {
+      state.gridApi = gridApi
+      state.colApi = colApi
     },
     DELETE_COLUMN(state, colId) {
       const deletedIndex = state.columnDefs.findIndex((c) => c.field == colId)
@@ -34,7 +36,22 @@ export default {
       colDefs.splice(deletedIndex, 1)
       state.columnDefs = mapHeaderSet(colDefs)
     },
-    DELETE_CHILD_COLUMN(_, { parent, colId }) {
+    DELETE_CHILD_GROUP(state, groupId) {
+      const groupParent = state.colApi.getColumnGroup(groupId).getParent()
+      const childIndex = groupParent.children.findIndex((c) => c.groupId == groupId)
+      groupParent.getColGroupDef().children.splice(childIndex, 1)
+      console.log(groupParent, childIndex)
+
+      let root = groupParent
+      while (root.getParent() != null) {
+        root = root.getParent()
+      }
+      const rootId = root.groupId
+      root = mapFullColGroupDefToLean(root.getColGroupDef())
+      const rootIndex = state.gridApi.getColumnDefs().findIndex((c) => c.groupId == rootId)
+      state.columnDefs.splice(rootIndex, 1, root)
+    },
+    DELETE_CHILD_COLUMN(state, { parent, colId }) {
       const parentDef = parent.getColGroupDef()
       const children = parentDef.children
       const deletedIndex = children.findIndex((c) => c.field == colId)
