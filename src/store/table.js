@@ -92,6 +92,9 @@ export default {
 
       columnDefs.splice(colIndex, 1, parentDef)
       state.columnDefs = columnDefs
+      // wait and re-sync, so that "getHeaderGroups" is triggered
+      // again with updated values
+      setTimeout(() => state.gridApi.refreshHeader(), 500)
     },
     ADD_COLUMN(state, { name, colId }) {
       const startIndex = state.columnDefs.findIndex((c) => c.field == colId)
