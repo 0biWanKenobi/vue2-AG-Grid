@@ -76,7 +76,7 @@ export default {
       headerComponentParams: {
         enableMenu: true,
         getHeaderGroups: this.getHeaderGroups,
-        onAddToGroup: this.addColumnToGroup,
+        onAddToGroup: ({ groupId, column }) => commit('table/ADD_TO_GROUP', { groupId, column }),
         onDeleteHeader: (params) => {
           const { column } = params
           const isChild = this.isChildColumn(column)
@@ -150,25 +150,6 @@ export default {
       this.$set(groupDef, 'headerName', name)
       // need full reassignment
       this.columnDefs = mapHeaderSet(this.gridApi.getColumnDefs())
-    },
-    addColumnToGroup({ groupId, column }) {
-      const groupDef = this.colApi.getColumnGroup(groupId).getColGroupDef()
-      groupDef.children.splice(0, 0, { ...column.getColDef() })
-
-      this.gridApi.setColumnDefs(this.columnDefs)
-      commit('table/DELETE_COLUMN', column.colId)
-      this.gridApi.refreshHeader()
-      // this.gridApi.setColumnDefs(this.columnDefs)
-    },
-    deleteChildColumn(parent, colId) {
-      const children = parent.getColGroupDef().children
-      const deletedIndex = children.findIndex((c) => c.field == colId)
-      children.splice(deletedIndex, 1)
-      this.gridApi.setColumnDefs(this.columnDefs)
-      if (children.length == 0) {
-        this.columnDefs = mapHeaderSet(this.gridApi.getColumnDefs())
-      }
-      this.gridApi.sizeColumnsToFit()
     },
     onGridReady(params) {
       this.gridApi = params.api
