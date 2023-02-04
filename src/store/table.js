@@ -111,14 +111,14 @@ export default {
       children.splice(currIndex + 1, 0, newCol)
       state.gridApi.setColumnDefs(state.columnDefs)
     },
-    ADD_TO_GROUP(state, {groupId, column}) {
+    ADD_TO_GROUP(state, { groupId, column }) {
       const groupDef = state.colApi.getColumnGroup(groupId).getColGroupDef()
       groupDef.children.splice(0, 0, { ...column.getColDef() })
 
       state.gridApi.setColumnDefs(state.columnDefs)
-      commit('table/DELETE_COLUMN', column.colId)
+      this.commit('table/DELETE_COLUMN', column.colId)
       state.gridApi.refreshHeader()
-    }
+    },
   },
   actions: {
     ...make.actions(state),
