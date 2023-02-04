@@ -67,6 +67,8 @@ export default {
           if (groupParent) commit('table/DELETE_CHILD_GROUP', groupId)
           else commit('table/DELETE_GROUP', groupId)
         },
+        onAddToGroup: (params) => commit('table/ADD_GROUP_TO_GROUP', params),
+        getHeaderGroups: this.getHeaderGroups,
       },
     }
     this.defaultColDef = {

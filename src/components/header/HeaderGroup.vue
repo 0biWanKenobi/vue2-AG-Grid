@@ -11,6 +11,23 @@
         <v-list-item class="list_item" v-for="(item, i) in items" :key="i">
           <v-list-item-title @click="item.action()">{{ item.title }}</v-list-item-title>
         </v-list-item>
+
+
+      <v-list-group no-action @click.stop :value="false">
+        <template v-slot:activator>
+          <v-list-item-content>
+            <v-list-item-title>Add to Group</v-list-item-title>
+          </v-list-item-content>
+        </template>
+        <v-list-item class="list_item" v-for="(item, i) in params.getHeaderGroups()" :key="i">
+          <v-list-item-content>
+            <v-list-item-title @click="params.onAddToGroup({ destGroupId: item.groupId, group: params.columnGroup })">
+              {{ item.name }}
+            </v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+      </v-list-group>
+
       </v-list>
     </v-menu>
     <div v-if="editingLabel">
@@ -84,6 +101,9 @@ export default {
       this.params.onAddParent({ group: this.params.columnGroup, name: parentName })
       this.addingParent = false
     },
+    onAddToGroup() {
+
+    }
   },
 }
 </script>
