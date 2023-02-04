@@ -51,19 +51,30 @@ export default {
       siblings: null,
     }
   },
-  mounted() {
-    const parentInfo = this.params.column.getParent()?.getColGroupDef()
-    if (parentInfo?.headerName) {
-      this.items.splice(3, 1)
-    }
+  methods: {
+    updateMenu(params) {
+      const parentInfo = params.column.getParent()?.getColGroupDef()
+      if (parentInfo?.headerName) {
+        this.items.splice(3, 1)
+      }
 
-    if (!parentInfo?.children) return
-    this.siblings = parentInfo.children
+      if (!parentInfo?.children) {
+        this.siblings = []
+        return
+      }
+      this.siblings = parentInfo.children
+    },
+  },
+  mounted() {
+    this.updateMenu(this.params)
   },
   watch: {
     siblings(children) {
       if (children.length > 1) return
       this.items = this.items.filter((i) => i.title != 'Delete')
+    },
+    params(newParams) {
+      this.updateMenu(newParams)
     },
   },
 }
