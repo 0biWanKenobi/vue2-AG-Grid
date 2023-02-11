@@ -104,6 +104,12 @@ export default {
         field: name.replaceAll(' ', '_').toLowerCase(),
       })
     },
+    PUSH_COLUMN(state, { name }) {
+      state.columnDefs.splice(state.columnDefs.length, 0, {
+        headerName: name,
+        field: name.replaceAll(' ', '_').toLowerCase(),
+      })
+    },
     ADD_CHILD_COLUMN(state, { parent, name, colId }) {
       const children = parent.getColGroupDef().children
       const currIndex = children.findIndex((c) => c.field == colId)
@@ -122,18 +128,16 @@ export default {
       this.commit('table/DELETE_COLUMN', column.colId)
       state.gridApi.refreshHeader()
     },
-    ADD_GROUP_TO_GROUP(state, {destGroupId, group}) {
+    ADD_GROUP_TO_GROUP(state, { destGroupId, group }) {
       // add group to group
       const destGroupDef = state.colApi.getColumnGroup(destGroupId).getColGroupDef()
       destGroupDef.children.splice(0, 0, { ...group.getColGroupDef() })
 
       state.gridApi.setColumnDefs(state.columnDefs)
-      if(group.getParent())
-        this.commit('table/DELETE_CHILD_GROUP', group.groupId)
-      else
-        this.commit('table/DELETE_GROUP', group.groupId)
+      if (group.getParent()) this.commit('table/DELETE_CHILD_GROUP', group.groupId)
+      else this.commit('table/DELETE_GROUP', group.groupId)
       state.gridApi.refreshHeader()
-    }
+    },
   },
   actions: {
     ...make.actions(state),

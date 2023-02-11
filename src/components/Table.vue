@@ -1,8 +1,9 @@
 <template>
   <v-container>
+    <new-col-dialog v-model="newColDialogOpen" @save="pushColumn($event)"></new-col-dialog>
     <v-app-bar class="mb-4">
       <v-btn outlined class="mr-2">New table</v-btn>
-      <v-btn outlined class="mr-2">Add Column</v-btn>
+      <v-btn outlined class="mr-2" @click="() => (newColDialogOpen = true)">Add Column</v-btn>
       <v-btn outlined class="mr-2" @click="showEditor = !showEditor">Advanced Editor</v-btn>
     </v-app-bar>
     <ag-grid-vue
@@ -30,6 +31,7 @@ import JSON5 from 'json5'
 
 import CustomHeader from './header/Header.vue'
 import CustomHeaderGroup from './header/HeaderGroup.vue'
+import NewColDialog from './header/NewColDialog.vue'
 import JsonEditor from './JsonEditor.vue'
 import { mapHeaderSet } from './colDefMapper'
 
@@ -43,6 +45,7 @@ export default {
       rowData: null,
       headerJsonDef: '',
       showEditor: false,
+      newColDialogOpen: false,
     }
   },
   computed: {
@@ -54,6 +57,7 @@ export default {
     agColumnHeader: CustomHeader,
     CustomHeaderGroup,
     JsonEditor,
+    NewColDialog,
   },
   beforeMount() {
     this.defaultColGroupDef = {
@@ -134,6 +138,9 @@ export default {
         ?.getAllDisplayedColumnGroups()
         ?.filter((cg) => cg.getColGroupDef && cg.getColGroupDef().children)
         .map((cg) => ({ groupId: cg.groupId, name: cg.getColGroupDef().headerName }))
+    },
+    pushColumn(colName) {
+      commit('table/PUSH_COLUMN', { name: colName })
     },
     addGrandParent({ name, group }) {
       let groupDef = group.getColGroupDef()
