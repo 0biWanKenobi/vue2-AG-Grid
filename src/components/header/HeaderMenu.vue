@@ -9,7 +9,7 @@
       <v-list-item class="list_item" v-for="(item, i) in items" :key="i">
         <v-list-item-title @click="item.action()">{{ item.title }}</v-list-item-title>
       </v-list-item>
-      <v-list-group no-action @click.stop :value="false">
+      <v-list-group no-action @click.stop :value="false" v-if="hasNoParent">
         <template v-slot:activator>
           <v-list-item-content>
             <v-list-item-title>Add to Group</v-list-item-title>
@@ -31,7 +31,7 @@ export default {
   props: ['params'],
   data() {
     return {
-      items: [
+      baseItems: [
         { title: 'Rename', action: () => this.$emit('editingEnabled') },
         {
           title: 'Delete',
@@ -48,34 +48,41 @@ export default {
           action: () => this.$emit('addParent'),
         },
       ],
-      siblings: null,
     }
   },
+  computed: {
+    parentInfo() {
+      return this.params.column.getParent()?.getColGroupDef() ?? {}
+    },
+    siblings() {
+      return this.parentInfo.children ?? []
+    },
+    hasParent() {
+      const parent = this.params.column.getParent()
+      return !!parent && !!this.parentInfo.headerName
+    },
+    hasNoParent() {
+      return !this.hasParent
+    },
+    canSelfDelete() {
+      return this.siblings.length > 1 || !this.hasParent
+    },
+    items() {
+      let returnedItems = this.baseItems
+      if (!this.canSelfDelete) returnedItems = returnedItems.filter((i) => i.title != 'Delete')
+      if (this.hasParent) returnedItems = returnedItems.filter((i) => i.title != 'Add parent')
+      return returnedItems
+    },
+  },
   methods: {
-    updateMenu(params) {
-      const parentInfo = params.column.getParent()?.getColGroupDef()
-      if (parentInfo?.headerName) {
+    updateMenu(_params) {
+      if (this.hasParent) {
         this.items.splice(3, 1)
       }
-
-      if (!parentInfo?.children) {
-        this.siblings = []
-        return
-      }
-      this.siblings = parentInfo.children
     },
   },
   mounted() {
     this.updateMenu(this.params)
-  },
-  watch: {
-    siblings(children) {
-      if (children.length > 1) return
-      this.items = this.items.filter((i) => i.title != 'Delete')
-    },
-    params(newParams) {
-      this.updateMenu(newParams)
-    },
   },
 }
 </script>
