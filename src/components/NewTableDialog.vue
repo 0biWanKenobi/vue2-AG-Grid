@@ -8,7 +8,14 @@
         <v-container>
           <v-row>
             <v-col cols="12" sm="6" md="4">
-              <v-text-field label="Label*" v-model="label" required></v-text-field>
+              <v-text-field label="Columns*" v-model="columnCount" required></v-text-field>
+              <v-text-field
+                v-for="(col, i) of columnDefinitions"
+                :key="i"
+                :label="`Header ${i + 1} text`"
+                v-model="columnDefinitions[i]"
+                required
+              ></v-text-field>
             </v-col>
           </v-row>
         </v-container>
@@ -29,13 +36,43 @@
  *
  */
 export default {
+  props: {
+    open: Boolean,
+  },
+  model: {
+    prop: 'open',
+  },
   data() {
     return {
-      columnDefinitions: [],
+      columnCount: 1,
+      columnDefinitions$: [''],
     }
+  },
+  computed: {
+    dialog: {
+      get() {
+        return this.open
+      },
+      set(v) {
+        this.$emit('input', v)
+      },
+    },
+    columnDefinitions: {
+      get() {
+        const colCount = this.columnCount - this.columnDefinitions$.length
+        if (colCount == 0) return this.columnDefinitions$
+        return [...this.columnDefinitions$, Array.from({ length: colCount }, () => '')]
+      },
+      set(v) {
+        this.columnDefinitions$ = v
+      },
+    },
   },
   methods: {
     defineColumn(index, name) {},
+    onClose() {
+      this.dialog = false
+    },
   },
 }
 </script>

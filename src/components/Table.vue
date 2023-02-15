@@ -1,8 +1,9 @@
 <template>
   <v-container>
     <new-col-dialog v-model="newColDialogOpen" @save="pushColumn($event)"></new-col-dialog>
+    <new-table-dialog v-model="newTableDialogOpen"></new-table-dialog>
     <v-app-bar class="mb-4">
-      <v-btn outlined class="mr-2">New table</v-btn>
+      <v-btn outlined class="mr-2" @click="newTableDialogOpen = true">New table</v-btn>
       <v-btn outlined class="mr-2" @click="() => (newColDialogOpen = true)">Add Column</v-btn>
       <v-btn outlined class="mr-2" @click="showEditor = !showEditor">Advanced Editor</v-btn>
     </v-app-bar>
@@ -32,6 +33,7 @@ import JSON5 from 'json5'
 import CustomHeader from './header/Header.vue'
 import CustomHeaderGroup from './header/HeaderGroup.vue'
 import NewColDialog from './header/NewColDialog.vue'
+import NewTableDialog from './NewTableDialog.vue'
 import JsonEditor from './JsonEditor.vue'
 import { mapHeaderSet } from './colDefMapper'
 
@@ -46,6 +48,7 @@ export default {
       headerJsonDef: '',
       showEditor: false,
       newColDialogOpen: false,
+      newTableDialogOpen: false,
     }
   },
   computed: {
@@ -58,6 +61,7 @@ export default {
     CustomHeaderGroup,
     JsonEditor,
     NewColDialog,
+    NewTableDialog,
   },
   beforeMount() {
     this.defaultColGroupDef = {
