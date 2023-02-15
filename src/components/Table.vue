@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <new-col-dialog v-model="newColDialogOpen" @save="pushColumn($event)"></new-col-dialog>
-    <new-table-dialog v-model="newTableDialogOpen"></new-table-dialog>
+    <new-table-dialog v-model="newTableDialogOpen" @save="createTable($event)"></new-table-dialog>
     <v-app-bar class="mb-4">
       <v-btn outlined class="mr-2" @click="newTableDialogOpen = true">New table</v-btn>
       <v-btn outlined class="mr-2" @click="() => (newColDialogOpen = true)">Add Column</v-btn>
@@ -115,6 +115,9 @@ export default {
     ]
   },
   methods: {
+    createTable(headerNames) {
+      console.log(headerNames)
+    },
     setColDefs() {
       this.columnDefs = JSON5.parse(this.headerJsonDef)
     },

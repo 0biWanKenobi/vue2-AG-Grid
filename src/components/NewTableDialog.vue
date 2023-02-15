@@ -8,9 +8,9 @@
         <v-container>
           <v-row>
             <v-col cols="12" sm="6" md="4">
-              <v-text-field label="Columns*" v-model="columnCount" required></v-text-field>
+              <v-text-field label="Columns*" v-model.number="columnCount" required type="number"></v-text-field>
               <v-text-field
-                v-for="(col, i) of columnDefinitions"
+                v-for="(col, i) of columnCount"
                 :key="i"
                 :label="`Header ${i + 1} text`"
                 v-model="columnDefinitions[i]"
@@ -45,7 +45,7 @@ export default {
   data() {
     return {
       columnCount: 1,
-      columnDefinitions$: [''],
+      columnDefinitions: [''],
     }
   },
   computed: {
@@ -57,22 +57,16 @@ export default {
         this.$emit('input', v)
       },
     },
-    columnDefinitions: {
-      get() {
-        const colCount = this.columnCount - this.columnDefinitions$.length
-        if (colCount == 0) return this.columnDefinitions$
-        return [...this.columnDefinitions$, Array.from({ length: colCount }, () => '')]
-      },
-      set(v) {
-        this.columnDefinitions$ = v
-      },
-    },
+
   },
   methods: {
     defineColumn(index, name) {},
     onClose() {
       this.dialog = false
     },
+    onSave() {
+      this.$emit('save', this.columnDefinitions)
+    }
   },
 }
 </script>
