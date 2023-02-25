@@ -10,7 +10,7 @@
 </template>
 
 <script>
-import { sync } from 'vuex-pathify'
+import { sync, get } from 'vuex-pathify'
 import { codemirror } from 'vue-codemirror'
 // import base style
 import 'codemirror/lib/codemirror.css'
@@ -35,7 +35,6 @@ export default {
   },
   data() {
     return {
-      currText: '',
       cmPlaceholder: `Header definition in JSON format
         Es.:
         [
@@ -59,6 +58,18 @@ export default {
   },
   computed: {
     shouldPrettyPrint: sync('table/shouldPrettyPrint'),
+    columnDefs: get('table/columnDefs'),
+    currText: {
+      get() {
+        return JSON.stringify(this.columnDefs)
+      },
+      set(v) {
+        this.$emit('input', v)
+      },
+    },
+  },
+  created() {
+    this.prettyPrint()
   },
   methods: {
     onCmCodeChange(newCode) {
