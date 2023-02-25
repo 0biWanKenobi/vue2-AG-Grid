@@ -6,6 +6,7 @@
       <v-btn outlined class="mr-2" @click="newTableDialogOpen = true">New table</v-btn>
       <v-btn outlined class="mr-2" @click="() => (newColDialogOpen = true)">Add Column</v-btn>
       <v-btn outlined class="mr-2" @click="showEditor = !showEditor">Advanced Editor</v-btn>
+      <v-file-input label="Upload CSV" accept=".csv" @change="onFileChange"></v-file-input>
     </v-app-bar>
     <ag-grid-vue
       class="ag-theme-alpine custom-theme"
@@ -68,7 +69,6 @@ export default {
       headerGroupComponent: 'CustomHeaderGroup',
       headerGroupComponentParams: {
         onRename: (params) => commit('table/RENAME_GROUP', params),
-        onPrintTree: (colGroup) => this.printColumnTree(colGroup),
         onAddParent: this.addGrandParent,
         onDelete: ({ groupId }) => {
           const groupParent = this.colApi.getColumnGroup(groupId).getParent()
@@ -104,7 +104,6 @@ export default {
             commit('table/ADD_CHILD_COLUMN', { parent: column.parent, colId: column.colId, name })
           } else commit('table/ADD_COLUMN', { colId: column.colId, name })
         },
-        onPrintTree: (column) => this.printColumnTree(column),
       },
     }
 
@@ -123,18 +122,6 @@ export default {
     isChildColumn(column) {
       const parent = column.getParent()
       return parent && !!column.parent.getColGroupDef().children
-    },
-    getColumnTree(column) {
-      let tree = []
-      const parent = column.getParent()
-      if (this.isChildColumn(column)) {
-        tree.push(parent)
-        tree = [...tree, ...this.getColumnTree(parent)]
-      }
-      return tree
-    },
-    printColumnTree(column) {
-      console.log(this.getColumnTree(column))
     },
     getHeaderGroups() {
       return this.colApi
