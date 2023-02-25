@@ -7,14 +7,7 @@ const state = {
   shouldPrettyPrint: false,
   gridApi: null,
   colApi: null,
-  columnDefs: [
-    { headerName: 'Make', field: 'make', sortable: true },
-    {
-      headerName: 'Model',
-      children: [{ field: 'name' }, { field: 'spec' }],
-    },
-    { headerName: 'Price', field: 'price' },
-  ],
+  columnDefs: [],
 }
 
 export default {
@@ -25,6 +18,9 @@ export default {
     SET_APIS(state, { gridApi, colApi }) {
       state.gridApi = gridApi
       state.colApi = colApi
+    },
+    SET_COLUMNS(state, { columns }) {
+      state.columnDefs = columns
     },
     DELETE_COLUMN(state, colId) {
       const deletedIndex = state.columnDefs.findIndex((c) => c.field == colId)

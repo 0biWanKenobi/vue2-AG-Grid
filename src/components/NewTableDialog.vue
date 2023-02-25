@@ -10,7 +10,7 @@
             <v-col cols="12" sm="6" md="4">
               <v-text-field label="Columns*" v-model.number="columnCount" required type="number"></v-text-field>
               <v-text-field
-                v-for="(col, i) of columnCount"
+                v-for="(_col, i) of columnCount"
                 :key="i"
                 :label="`Header ${i + 1} text`"
                 v-model="columnDefinitions[i]"
@@ -35,6 +35,8 @@
  *  draggable tree package: https://hetree.phphe.com/v2/guide
  *
  */
+import { sync } from 'vuex-pathify'
+
 export default {
   props: {
     open: Boolean,
@@ -57,16 +59,23 @@ export default {
         this.$emit('input', v)
       },
     },
-
+    columnDefs: sync('table/columnDefs'),
+  },
+  created() {
+    this.columnCount = this.columnDefs.length
+    this.columnDefinitions = this.columnDefs.map((cd) => cd.headerName)
   },
   methods: {
-    defineColumn(index, name) {},
     onClose() {
       this.dialog = false
     },
     onSave() {
-      this.$emit('save', this.columnDefinitions)
-    }
+      this.columnDefs = this.columnDefinitions.slice(0, this.columnCount).map((c) => ({
+        headerName: c,
+        field: c.replaceAll(' ', '_').toLowerCase(),
+      }))
+      this.onClose()
+    },
   },
 }
 </script>

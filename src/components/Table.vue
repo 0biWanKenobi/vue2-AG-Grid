@@ -108,11 +108,7 @@ export default {
       },
     }
 
-    this.rowData = [
-      { make: 'Toyota', name: 'Celica', spec: 'GT', price: 35000 },
-      { make: 'Ford', name: 'Mondeo', spec: 'Coupe', price: 32000 },
-      { make: 'Porsche', name: 'Boxter', spec: '4S', price: 72000 },
-    ]
+    this.rowData = []
   },
   methods: {
     createTable(headerNames) {
