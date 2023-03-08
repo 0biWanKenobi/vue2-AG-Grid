@@ -95,24 +95,7 @@ export default {
       headerComponentParams: {
         enableMenu: true,
         getHeaderGroups: this.getHeaderGroups,
-        onAddToGroup: ({ groupId, column }) => commit('table/ADD_TO_GROUP', { groupId, column }),
-        onDeleteHeader: (params) => {
-          const { column } = params
-          const isChild = this.isChildColumn(column)
-          if (isChild) {
-            commit('table/DELETE_CHILD_COLUMN', { parent: column.parent, colId: column.colId })
-          } else commit('table/DELETE_COLUMN', column.colId)
-        },
-        onRenameHeader: ({ value, column }) => {
-          commit('table/RENAME_COLUMN', { newName: value, colId: column.colId })
-        },
-        onAddParentHeader: (params) => commit('table/SET_GROUP', params),
-        onAddHeader: ({ name, column }) => {
-          const isChild = this.isChildColumn(column)
-          if (isChild) {
-            commit('table/ADD_CHILD_COLUMN', { parent: column.parent, colId: column.colId, name })
-          } else commit('table/ADD_COLUMN', { colId: column.colId, name })
-        },
+        isChildColumn: this.isChildColumn,
       },
     }
 
@@ -154,7 +137,7 @@ export default {
     },
     isChildColumn(column) {
       const parent = column.getParent()
-      return parent && !!column.parent.getColGroupDef().children
+      return !!parent && !!parent.getColGroupDef().children
     },
     getHeaderGroups() {
       return this.colApi

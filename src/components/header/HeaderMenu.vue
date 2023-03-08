@@ -17,7 +17,7 @@
         </template>
         <v-list-item class="list_item" v-for="(item, i) in params.getHeaderGroups()" :key="i">
           <v-list-item-content>
-            <v-list-item-title @click="params.onAddToGroup({ groupId: item.groupId, column: params.column })">
+            <v-list-item-title @click="$emit('addToGroup', { groupId: item.groupId })">
               {{ item.name }}
             </v-list-item-title>
           </v-list-item-content>
@@ -35,9 +35,7 @@ export default {
         { title: 'Rename', action: () => this.$emit('editingEnabled') },
         {
           title: 'Delete',
-          action: () => {
-            this.params.onDeleteHeader({ column: this.params.column })
-          },
+          action: () => this.$emit('delete'),
         },
         {
           title: 'Add new',

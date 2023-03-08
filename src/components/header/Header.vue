@@ -14,6 +14,8 @@
           @editingEnabled="onEditingEnabled"
           @addNew="newColDialogOpen = true"
           @addParent="addingParent = newColDialogOpen = true"
+          @addToGroup="onAddToParent"
+          @delete="onDelete"
         ></header-menu>
         <v-text-field
           v-if="editingLabel"
@@ -37,6 +39,8 @@
 <script>
 import NewColDialog from './NewColDialog.vue'
 import HeaderMenu from './HeaderMenu.vue'
+import { commit } from 'vuex-pathify'
+
 export default {
   components: {
     newColDialog: NewColDialog,
@@ -65,14 +69,30 @@ export default {
       this.tempValue = this.params.displayName
     },
     onSaveLabel() {
-      this.params.onRenameHeader({ value: this.tempValue, column: this.params.column })
+      commit('table/RENAME_COLUMN', { newName: this.tempValue, colId: this.params.column.colId })
       this.editingLabel = false
     },
     onNewParent(newParentName) {
-      this.params.onAddParentHeader({ name: newParentName, column: this.params.column })
+      commit('table/SET_GROUP', { name: newParentName, column: this.params.column })
+    },
+    onDelete() {
+      const isChild = this.params.isChildColumn(this.params.column)
+      if (isChild) {
+        commit('table/DELETE_CHILD_COLUMN', { parent: this.params.column.parent, colId: this.params.column.colId })
+      } else commit('table/DELETE_COLUMN', this.params.column.colId)
+    },
+    onAddToParent({ groupId }) {
+      commit('table/ADD_TO_GROUP', { groupId, column: this.params.column })
     },
     onNewColumn(newColName) {
-      this.params.onAddHeader({ name: newColName, column: this.params.column })
+      const isChild = this.params.isChildColumn(this.params.column)
+      if (isChild) {
+        commit('table/ADD_CHILD_COLUMN', {
+          parent: this.params.column.parent,
+          colId: this.params.column.colId,
+          name: newColName,
+        })
+      } else commit('table/ADD_COLUMN', { colId: this.params.column.colId, name: newColName })
     },
     onSortChanged() {
       if (this.params.column.isSortAscending()) {
