@@ -6,7 +6,12 @@
       <v-btn outlined class="mr-2" @click="newTableDialogOpen = true">New table</v-btn>
       <v-btn outlined class="mr-2" @click="() => (newColDialogOpen = true)">Add Column</v-btn>
       <v-btn outlined class="mr-2" @click="showEditor = !showEditor">Advanced Editor</v-btn>
-      <v-file-input label="Upload CSV" accept=".csv" @change="onFileChange"></v-file-input>
+      <v-file-input
+        label="Upload CSV"
+        accept=".csv"
+        @change="onFileChange($event)"
+        :loading="loadingCsv"
+      ></v-file-input>
     </v-app-bar>
     <ag-grid-vue
       class="ag-theme-alpine custom-theme"
@@ -30,6 +35,7 @@
 import { AgGridVue } from 'ag-grid-vue'
 import { sync, commit } from 'vuex-pathify'
 import JSON5 from 'json5'
+import Papa from 'papaparse'
 
 import CustomHeader from './header/Header.vue'
 import CustomHeaderGroup from './header/HeaderGroup.vue'
@@ -50,6 +56,7 @@ export default {
       showEditor: false,
       newColDialogOpen: false,
       newTableDialogOpen: false,
+      loadingCsv: false,
     }
   },
   computed: {
@@ -110,6 +117,33 @@ export default {
     this.rowData = []
   },
   methods: {
+    onFileChange(file) {
+      if (!file) return
+      this.loadingCsv = 'primary'
+      Papa.parse(file, {
+        complete: (results) => {
+          this.rowData = this.convertToRowData(results.data)
+          this.loadingCsv = false
+        },
+        error(error) {
+          console.log(error)
+          this.loadingCsv = false
+        },
+        header: true,
+        skipEmptyLines: true,
+        worker: Papa.WORKERS_SUPPORTED,
+      })
+    },
+    convertToRowData(data) {
+      return data.map((row) => {
+        const obj = {}
+        Object.keys(row).forEach((key) => {
+          const lkey = key.trim().replaceAll(' ', '_').toLowerCase()
+          obj[lkey] = row[key].trim()
+        })
+        return obj
+      })
+    },
     createTable(headerNames) {
       console.log(headerNames)
     },
