@@ -10,14 +10,14 @@
 </template>
 
 <script>
-import { sync, get } from 'vuex-pathify'
+import { get } from 'vuex-pathify'
 import { codemirror } from 'vue-codemirror'
 // import base style
 import 'codemirror/lib/codemirror.css'
 import 'codemirror/theme/monokai.css'
 import 'codemirror/mode/javascript/javascript.js'
 import 'codemirror/addon/display/placeholder.js'
-import { js as beautfyJs } from 'js-beautify'
+import { js as beautifyJs } from 'js-beautify'
 
 const beautifyJsOpts = {
   wrap_line_length: 80,
@@ -57,19 +57,15 @@ export default {
     }
   },
   computed: {
-    shouldPrettyPrint: sync('table/shouldPrettyPrint'),
     columnDefs: get('table/columnDefs'),
     currText: {
       get() {
-        return JSON.stringify(this.columnDefs)
+        return beautifyJs(JSON.stringify(this.columnDefs), beautifyJsOpts)
       },
       set(v) {
         this.$emit('input', v)
       },
     },
-  },
-  created() {
-    this.prettyPrint()
   },
   methods: {
     onCmCodeChange(newCode) {
@@ -84,17 +80,6 @@ export default {
     },
     clearCmPlaceholder() {
       this.$set(this.cmOptions, 'placeholder', '')
-    },
-    prettyPrint() {
-      if (!this.currText) return
-      this.currText = beautfyJs(this.currText, beautifyJsOpts)
-      this.shouldPrettyPrint = false
-    },
-  },
-  watch: {
-    shouldPrettyPrint(isRequested) {
-      if (!isRequested) return
-      this.prettyPrint()
     },
   },
 }

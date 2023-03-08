@@ -7,7 +7,8 @@
       <v-btn outlined class="mr-2" @click="() => (newColDialogOpen = true)">Add Column</v-btn>
       <v-btn outlined class="mr-2" @click="showEditor = !showEditor">Advanced Editor</v-btn>
       <v-file-input
-        label="Upload CSV"
+        v-if="showCsvUpload"
+        label="Upload table data"
         accept=".csv"
         @change="onFileChange($event)"
         :loading="loadingCsv"
@@ -26,7 +27,6 @@
     <div v-if="showEditor">
       <json-editor class="my-4" v-model="headerJsonDef"></json-editor>
       <v-btn @click="setColDefs()" class="mr-2">Set Headers</v-btn>
-      <v-btn @click="prettyPrint()">Pretty Print</v-btn>
     </div>
   </v-container>
 </template>
@@ -60,8 +60,10 @@ export default {
     }
   },
   computed: {
-    shouldPrettyPrint: sync('table/shouldPrettyPrint'),
     columnDefs: sync('table/columnDefs'),
+    showCsvUpload() {
+      return this.columnDefs?.length > 0
+    },
   },
   components: {
     AgGridVue,
@@ -149,9 +151,6 @@ export default {
     },
     setColDefs() {
       this.columnDefs = JSON5.parse(this.headerJsonDef)
-    },
-    prettyPrint() {
-      this.shouldPrettyPrint = true
     },
     isChildColumn(column) {
       const parent = column.getParent()

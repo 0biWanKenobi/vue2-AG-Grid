@@ -4,7 +4,6 @@ import store from './index'
 import { mapHeaderSet, mapFullColGroupDefToLean } from '../components/colDefMapper'
 
 const state = {
-  shouldPrettyPrint: false,
   gridApi: null,
   colApi: null,
   columnDefs: [],
