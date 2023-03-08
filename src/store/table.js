@@ -138,6 +138,24 @@ export default {
       else this.commit('table/DELETE_GROUP', group.groupId)
       state.gridApi.refreshHeader()
     },
+    SET_GROUP_PARENT(state, { name, group }) {
+      let groupDef = group.getColGroupDef()
+      const children = [
+        {
+          headerName: groupDef.headerName,
+          children: [...groupDef.children],
+        },
+      ]
+
+      groupDef.children.length && groupDef.children.splice(0, groupDef.children.length)
+      Object.keys(groupDef).forEach((key) => key != 'children' && delete groupDef[key])
+      groupDef.children.splice(0, 0, ...children)
+      state.gridApi.setColumnDefs(state.columnDefs)
+      groupDef = state.colApi.getColumnGroup(group.groupId).getColGroupDef()
+      groupDef.headerName = name
+      // need full reassignment
+      state.columnDefs = mapHeaderSet(state.gridApi.getColumnDefs())
+    },
   },
   actions: {
     ...make.actions(state),

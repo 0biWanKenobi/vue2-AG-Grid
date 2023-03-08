@@ -12,22 +12,20 @@
           <v-list-item-title @click="item.action()">{{ item.title }}</v-list-item-title>
         </v-list-item>
 
-
-      <v-list-group no-action @click.stop :value="false">
-        <template v-slot:activator>
-          <v-list-item-content>
-            <v-list-item-title>Add to Group</v-list-item-title>
-          </v-list-item-content>
-        </template>
-        <v-list-item class="list_item" v-for="(item, i) in params.getHeaderGroups()" :key="i">
-          <v-list-item-content>
-            <v-list-item-title @click="params.onAddToGroup({ destGroupId: item.groupId, group: params.columnGroup })">
-              {{ item.name }}
-            </v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-      </v-list-group>
-
+        <v-list-group no-action @click.stop :value="false">
+          <template v-slot:activator>
+            <v-list-item-content>
+              <v-list-item-title>Add to Group</v-list-item-title>
+            </v-list-item-content>
+          </template>
+          <v-list-item class="list_item" v-for="(item, i) in params.getHeaderGroups()" :key="i">
+            <v-list-item-content>
+              <v-list-item-title @click="onAddToGroup(item.groupId)">
+                {{ item.name }}
+              </v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+        </v-list-group>
       </v-list>
     </v-menu>
     <div v-if="editingLabel">
@@ -38,7 +36,9 @@
 </template>
 
 <script>
+import { commit } from 'vuex-pathify'
 import NewParentDialog from './NewColDialog.vue'
+
 export default {
   components: {
     NewParentDialog,
@@ -53,9 +53,7 @@ export default {
         { title: 'Rename', action: this.onEditingEnabled },
         {
           title: 'Delete',
-          action: () => {
-            this.params.onDelete({ groupId: this.params.columnGroup.groupId })
-          },
+          action: this.onDelete,
         },
         { title: 'Add Parent', action: this.openParentDialog },
       ],
@@ -66,7 +64,6 @@ export default {
       return (this.params.displayName ?? '') != ''
     },
   },
-  beforeMount() {},
   mounted() {
     this.params.columnGroup
       .getProvidedColumnGroup()
@@ -87,7 +84,7 @@ export default {
     },
     onSaveLabel() {
       this.editingLabel = false
-      this.params.onRename({ group: this.params.columnGroup, newName: this.tempValue })
+      commit('table/RENAME_GROUP', { group: this.params.columnGroup, newName: this.tempValue })
       this.tempValue = ''
     },
     onEditingEnabled() {
@@ -98,12 +95,17 @@ export default {
       this.addingParent = true
     },
     onAddParent(parentName) {
-      this.params.onAddParent({ group: this.params.columnGroup, name: parentName })
+      commit('table/SET_GROUP_PARENT', { group: this.params.columnGroup, name: parentName })
       this.addingParent = false
     },
-    onAddToGroup() {
-
-    }
+    onDelete() {
+      const groupParent = this.params.columnGroup.getParent()
+      if (groupParent) commit('table/DELETE_CHILD_GROUP', this.params.columnGroup.groupId)
+      else commit('table/DELETE_GROUP', this.params.columnGroup.groupId)
+    },
+    onAddToGroup(groupId) {
+      commit('table/ADD_GROUP_TO_GROUP', { destGroupId: groupId, group: this.params.columnGroup })
+    },
   },
 }
 </script>

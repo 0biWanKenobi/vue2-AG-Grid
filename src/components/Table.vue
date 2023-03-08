@@ -42,7 +42,6 @@ import CustomHeaderGroup from './header/HeaderGroup.vue'
 import NewColDialog from './header/NewColDialog.vue'
 import NewTableDialog from './NewTableDialog.vue'
 import JsonEditor from './JsonEditor.vue'
-import { mapHeaderSet } from './colDefMapper'
 
 export default {
   data() {
@@ -77,14 +76,6 @@ export default {
     this.defaultColGroupDef = {
       headerGroupComponent: 'CustomHeaderGroup',
       headerGroupComponentParams: {
-        onRename: (params) => commit('table/RENAME_GROUP', params),
-        onAddParent: this.addGrandParent,
-        onDelete: ({ groupId }) => {
-          const groupParent = this.colApi.getColumnGroup(groupId).getParent()
-          if (groupParent) commit('table/DELETE_CHILD_GROUP', groupId)
-          else commit('table/DELETE_GROUP', groupId)
-        },
-        onAddToGroup: (params) => commit('table/ADD_GROUP_TO_GROUP', params),
         getHeaderGroups: this.getHeaderGroups,
       },
     }
@@ -147,24 +138,6 @@ export default {
     },
     pushColumn(colName) {
       commit('table/PUSH_COLUMN', { name: colName })
-    },
-    addGrandParent({ name, group }) {
-      let groupDef = group.getColGroupDef()
-      const children = [
-        {
-          headerName: groupDef.headerName,
-          children: [...groupDef.children],
-        },
-      ]
-
-      groupDef.children.length && groupDef.children.splice(0, groupDef.children.length)
-      Object.keys(groupDef).forEach((key) => key != 'children' && delete groupDef[key])
-      groupDef.children.splice(0, 0, ...children)
-      this.gridApi.setColumnDefs(this.columnDefs)
-      groupDef = this.colApi.getColumnGroup(group.groupId).getColGroupDef()
-      this.$set(groupDef, 'headerName', name)
-      // need full reassignment
-      this.columnDefs = mapHeaderSet(this.gridApi.getColumnDefs())
     },
     onGridReady(params) {
       this.gridApi = params.api
