@@ -118,7 +118,12 @@ export default {
     },
     ADD_TO_GROUP(state, { groupId, column }) {
       const groupDef = state.colApi.getColumnGroup(groupId).getColGroupDef()
-      groupDef.children.splice(0, 0, { ...column.getColDef() })
+      const colDef = column.getColDef()
+      groupDef.children.splice(0, 0, {
+        headerName: colDef.headerName,
+        field: colDef.field,
+        sortable: !!colDef.sortable,
+      })
 
       state.gridApi.setColumnDefs(state.columnDefs)
       this.commit('table/DELETE_COLUMN', column.colId)
