@@ -149,7 +149,6 @@ export default {
 
       state.gridApi.setColumnDefs(state.columnDefs)
       this.commit('table/DELETE_COLUMN', column.colId)
-      state.gridApi.refreshHeader()
     },
     ADD_GROUP_TO_GROUP(state, { destGroupId, group }) {
       // add group to group
@@ -159,7 +158,6 @@ export default {
       state.gridApi.setColumnDefs(state.columnDefs)
       if (group.getParent()) this.commit('table/DELETE_CHILD_GROUP', group.groupId)
       else this.commit('table/DELETE_GROUP', group.groupId)
-      state.gridApi.refreshHeader()
     },
     SET_GROUP_PARENT(state, { name, group }) {
       const groupIndex = state.columnDefs.findIndex((c) => c.groupId == group.groupId)
