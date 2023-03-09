@@ -2,11 +2,17 @@ import { make } from 'vuex-pathify'
 import store from './index'
 
 import { mapHeaderSet, mapFullColGroupDefToLean } from '../components/colDefMapper'
+import { v4 as randomUUID } from 'uuid'
 
 const state = {
   gridApi: null,
   colApi: null,
   columnDefs: [],
+  syncInProgress: false,
+}
+
+const deriveColIdFrom = (name) => {
+  return name.replaceAll(' ', '_').toLowerCase()
 }
 
 export default {
@@ -21,8 +27,17 @@ export default {
     SET_COLUMNS(state, { columns }) {
       state.columnDefs = columns
     },
+    SYNC_COLUMNS(state) {
+      if (state.syncInProgress) {
+        state.syncInProgress = false
+        return
+      }
+      state.syncInProgress = true
+      state.columnDefs = mapHeaderSet(state.gridApi.getColumnDefs())
+      state.gridApi.refreshHeader()
+    },
     DELETE_COLUMN(state, colId) {
-      const deletedIndex = state.columnDefs.findIndex((c) => c.field == colId)
+      const deletedIndex = state.columnDefs.findIndex((c) => c.colId == colId)
       state.columnDefs.splice(deletedIndex, 1)
     },
     DELETE_GROUP(state, groupId) {
@@ -33,9 +48,9 @@ export default {
     },
     DELETE_CHILD_GROUP(state, groupId) {
       const groupParent = state.colApi.getColumnGroup(groupId).getParent()
-      const childIndex = groupParent.children.findIndex((c) => c.groupId == groupId)
-      groupParent.getColGroupDef().children.splice(childIndex, 1)
-      console.log(groupParent, childIndex)
+      const children = groupParent.getColGroupDef().children
+      const childIndex = children.findIndex((c) => c.groupId == groupId)
+      children.splice(childIndex, 1)
 
       let root = groupParent
       while (root.getParent() != null) {
@@ -49,7 +64,7 @@ export default {
     DELETE_CHILD_COLUMN(state, { parent, colId }) {
       const parentDef = parent.getColGroupDef()
       const children = parentDef.children
-      const deletedIndex = children.findIndex((c) => c.field == colId)
+      const deletedIndex = children.findIndex((c) => c.colId == colId)
       children.splice(deletedIndex, 1)
       state.columnDefs = store.copy('table/columnDefs')
       // TO DO: find a way to handle the case when we delete the last children,
@@ -72,10 +87,11 @@ export default {
     SET_GROUP(state, { name, column }) {
       let columnDefs = mapHeaderSet(state.gridApi.getColumnDefs())
       const colDef = column.getColDef()
-      const colIndex = columnDefs.findIndex((c) => c.field == column.colId)
+      const colIndex = columnDefs.findIndex((c) => c.colId == column.colId)
 
       const parentDef = {
         headerName: name,
+        groupId: randomUUID(),
         children: [
           {
             headerName: colDef.headerName,
@@ -89,28 +105,34 @@ export default {
       state.columnDefs = columnDefs
       // wait and re-sync, so that "getHeaderGroups" is triggered
       // again with updated values
-      setTimeout(() => state.gridApi.refreshHeader(), 500)
+      // setTimeout(() => state.gridApi.refreshHeader(), 500)
     },
     ADD_COLUMN(state, { name, colId }) {
-      const startIndex = state.columnDefs.findIndex((c) => c.field == colId)
+      const startIndex = state.columnDefs.findIndex((c) => c.colId == colId)
+      const newColId = deriveColIdFrom(name)
 
       state.columnDefs.splice(startIndex + 1, 0, {
         headerName: name,
-        field: name.replaceAll(' ', '_').toLowerCase(),
+        field: newColId,
+        colId: newColId,
       })
     },
     PUSH_COLUMN(state, { name }) {
+      const colId = deriveColIdFrom(name)
       state.columnDefs.splice(state.columnDefs.length, 0, {
         headerName: name,
-        field: name.replaceAll(' ', '_').toLowerCase(),
+        field: colId,
+        colId,
       })
     },
     ADD_CHILD_COLUMN(state, { parent, name, colId }) {
       const children = parent.getColGroupDef().children
-      const currIndex = children.findIndex((c) => c.field == colId)
+      const newColId = deriveColIdFrom(name)
+      const currIndex = children.findIndex((c) => c.colId == colId)
       const newCol = {
         headerName: name,
-        field: name.replaceAll(' ', '_').toLowerCase(),
+        field: newColId,
+        colId: newColId,
       }
       children.splice(currIndex + 1, 0, newCol)
       state.gridApi.setColumnDefs(state.columnDefs)
@@ -122,6 +144,7 @@ export default {
         headerName: colDef.headerName,
         field: colDef.field,
         sortable: !!colDef.sortable,
+        colId: colDef.colId,
       })
 
       state.gridApi.setColumnDefs(state.columnDefs)
@@ -131,7 +154,7 @@ export default {
     ADD_GROUP_TO_GROUP(state, { destGroupId, group }) {
       // add group to group
       const destGroupDef = state.colApi.getColumnGroup(destGroupId).getColGroupDef()
-      destGroupDef.children.splice(0, 0, { ...group.getColGroupDef() })
+      destGroupDef.children.splice(0, 0, { ...group.getColGroupDef(), groupId: randomUUID() })
 
       state.gridApi.setColumnDefs(state.columnDefs)
       if (group.getParent()) this.commit('table/DELETE_CHILD_GROUP', group.groupId)
@@ -139,22 +162,21 @@ export default {
       state.gridApi.refreshHeader()
     },
     SET_GROUP_PARENT(state, { name, group }) {
-      let groupDef = group.getColGroupDef()
-      const children = [
-        {
-          headerName: groupDef.headerName,
-          children: [...groupDef.children],
-        },
-      ]
+      const groupIndex = state.columnDefs.findIndex((c) => c.groupId == group.groupId)
 
-      groupDef.children.length && groupDef.children.splice(0, groupDef.children.length)
-      Object.keys(groupDef).forEach((key) => key != 'children' && delete groupDef[key])
-      groupDef.children.splice(0, 0, ...children)
-      state.gridApi.setColumnDefs(state.columnDefs)
-      groupDef = state.colApi.getColumnGroup(group.groupId).getColGroupDef()
-      groupDef.headerName = name
-      // need full reassignment
-      state.columnDefs = mapHeaderSet(state.gridApi.getColumnDefs())
+      let groupDef = group.getColGroupDef()
+
+      state.columnDefs.splice(groupIndex, 1, {
+        headerName: name,
+        groupId: randomUUID(),
+        children: [
+          {
+            headerName: groupDef.headerName,
+            groupId: randomUUID(),
+            children: [...groupDef.children],
+          },
+        ],
+      })
     },
   },
   actions: {

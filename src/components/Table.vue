@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <new-col-dialog v-model="newColDialogOpen" @save="pushColumn($event)"></new-col-dialog>
-    <new-table-dialog v-model="newTableDialogOpen" @save="createTable($event)"></new-table-dialog>
+    <new-table-dialog v-model="newTableDialogOpen"></new-table-dialog>
     <v-app-bar class="mb-4">
       <v-btn outlined class="mr-2" @click="newTableDialogOpen = true">New table</v-btn>
       <v-btn outlined class="mr-2" @click="() => (newColDialogOpen = true)">Add Column</v-btn>
@@ -18,6 +18,7 @@
       class="ag-theme-alpine custom-theme"
       style="width: 100%; height: 300px"
       @grid-ready="onGridReady"
+      @component-state-changed="onGridChanged()"
       :columnDefs="columnDefs"
       :defaultColDef="defaultColDef"
       :defaultColGroupDef="defaultColGroupDef"
@@ -93,6 +94,9 @@ export default {
     this.rowData = []
   },
   methods: {
+    onGridChanged() {
+      commit('table/SYNC_COLUMNS')
+    },
     onFileChange(file) {
       if (!file) return
       this.loadingCsv = 'primary'
@@ -124,7 +128,7 @@ export default {
       console.log(headerNames)
     },
     setColDefs() {
-      this.columnDefs = JSON5.parse(this.headerJsonDef)
+      commit('table/SET_COLUMNS', { columns: JSON5.parse(this.headerJsonDef) })
     },
     isChildColumn(column) {
       const parent = column.getParent()

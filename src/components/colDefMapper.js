@@ -3,12 +3,14 @@ export const mapFullColDefToLean = (colDef) => {
     headerName: colDef.headerName,
     sortable: colDef.sortable,
     field: colDef.field,
+    colId: colDef.colId,
   }
 }
 
 export const mapFullColGroupDefToLean = (colGroupDef) => {
   const leanDef = {
     headerName: colGroupDef.headerName,
+    groupId: colGroupDef.groupId,
   }
   if (!colGroupDef.children) return leanDef
   leanDef.children = colGroupDef.children.map((c) => {

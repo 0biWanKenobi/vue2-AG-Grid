@@ -117,6 +117,10 @@ export default {
 
       this.params.setSort(order, event.shiftKey)
     },
+    // refresh(params) {
+    //   console.log(params)
+    //   return true
+    // },
   },
 }
 </script>

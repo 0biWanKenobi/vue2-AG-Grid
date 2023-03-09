@@ -35,7 +35,7 @@
  *  draggable tree package: https://hetree.phphe.com/v2/guide
  *
  */
-import { sync } from 'vuex-pathify'
+import { sync, commit } from 'vuex-pathify'
 
 export default {
   props: {
@@ -70,10 +70,16 @@ export default {
       this.dialog = false
     },
     onSave() {
-      this.columnDefs = this.columnDefinitions.slice(0, this.columnCount).map((c) => ({
-        headerName: c,
-        field: c.replaceAll(' ', '_').toLowerCase(),
-      }))
+      const columnDefs = this.columnDefinitions.slice(0, this.columnCount).map((c) => {
+        const colId = c.replaceAll(' ', '_').toLowerCase()
+        return {
+          headerName: c,
+          field: colId,
+          colId: colId,
+        }
+      })
+
+      commit('table/SET_COLUMNS', { columns: columnDefs })
       this.onClose()
     },
   },
