@@ -56,14 +56,13 @@ export default {
       return this.parentInfo.children ?? []
     },
     hasParent() {
-      const parent = this.params.column.getParent()
-      return !!parent && !!this.parentInfo.headerName
+      return this.params.isChildColumn(this.params.column)
     },
     hasNoParent() {
       return !this.hasParent
     },
     canSelfDelete() {
-      return this.siblings.length > 1 || !this.hasParent
+      return this.siblings.length > 1 || this.hasNoParent
     },
     items() {
       let returnedItems = this.baseItems
@@ -72,15 +71,6 @@ export default {
       return returnedItems
     },
   },
-  methods: {
-    updateMenu(_params) {
-      if (this.hasParent) {
-        this.items.splice(3, 1)
-      }
-    },
-  },
-  mounted() {
-    this.updateMenu(this.params)
-  },
+  methods: {},
 }
 </script>
