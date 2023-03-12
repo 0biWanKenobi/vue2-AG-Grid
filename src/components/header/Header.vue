@@ -69,7 +69,7 @@ export default {
       this.tempValue = this.params.displayName
     },
     onSaveLabel() {
-      commit('table/RENAME_COLUMN', { newName: this.tempValue, colId: this.params.column.colId })
+      commit('table/RENAME_COLUMN', { newName: this.tempValue, colId: this.params.column.getColId() })
       this.editingLabel = false
     },
     onNewParent(newParentName) {
@@ -78,8 +78,8 @@ export default {
     onDelete() {
       const isChild = this.params.isChildColumn(this.params.column)
       if (isChild) {
-        commit('table/DELETE_CHILD_COLUMN', { parent: this.params.column.parent, colId: this.params.column.colId })
-      } else commit('table/DELETE_COLUMN', this.params.column.colId)
+        commit('table/DELETE_CHILD_COLUMN', { parent: this.params.column.parent, colId: this.params.column.getColId() })
+      } else commit('table/DELETE_COLUMN', this.params.column.getColId())
     },
     onAddToParent({ groupId }) {
       commit('table/ADD_TO_GROUP', { groupId, column: this.params.column })
@@ -89,10 +89,10 @@ export default {
       if (isChild) {
         commit('table/ADD_CHILD_COLUMN', {
           parent: this.params.column.parent,
-          colId: this.params.column.colId,
+          colId: this.params.column.getColId(),
           name: newColName,
         })
-      } else commit('table/ADD_COLUMN', { colId: this.params.column.colId, name: newColName })
+      } else commit('table/ADD_COLUMN', { colId: this.params.column.getColId(), name: newColName })
     },
     onSortChanged() {
       if (this.params.column.isSortAscending()) {
