@@ -132,7 +132,9 @@ export default {
     },
     isChildColumn(column) {
       const parent = column.getParent()
-      return !!parent && !!parent.getColGroupDef().children
+      if (!parent) return false
+      if (parent.getColGroupDef().children) return true
+      return this.isChildColumn(parent)
     },
     getHeaderGroups() {
       return this.colApi
