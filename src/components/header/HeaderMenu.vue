@@ -9,20 +9,30 @@
       <v-list-item class="list_item" v-for="(item, i) in items" :key="i">
         <v-list-item-title @click="item.action()">{{ item.title }}</v-list-item-title>
       </v-list-item>
-      <v-list-group no-action @click.stop :value="false" v-if="hasNoParent">
-        <template v-slot:activator>
-          <v-list-item-content>
-            <v-list-item-title>Add to Group</v-list-item-title>
-          </v-list-item-content>
-        </template>
-        <v-list-item class="list_item" v-for="(item, i) in params.getHeaderGroups()" :key="i">
-          <v-list-item-content>
-            <v-list-item-title @click="$emit('addToGroup', { groupId: item.groupId })">
-              {{ item.name }}
-            </v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-      </v-list-group>
+
+      <v-list-item v-if="showAddToGroup" no-action class="list_item">
+        <v-list-item-title @click.stop="openSubmenu">Add to Group</v-list-item-title>
+        <v-menu v-model="submenuOpen" :close-on-content-click="false" offset-x>
+          <template v-slot:activator="{ props }">
+            <v-list-item-action v-bind="props">
+              <v-icon>
+                {{ submenuOpen ? 'mdi-menu-down' : 'mdi-menu-right' }}
+              </v-icon>
+            </v-list-item-action>
+          </template>
+          <v-card>
+            <v-list dense>
+              <v-list-item class="list_item" v-for="(group, j) in params.getHeaderGroups()" :key="j">
+                <v-list-item-content>
+                  <v-list-item-title @click="$emit('addToGroup', { groupId: group.groupId })">
+                    {{ group.name }}
+                  </v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+            </v-list>
+          </v-card>
+        </v-menu>
+      </v-list-item>
     </v-list>
   </v-menu>
 </template>
@@ -31,6 +41,7 @@ export default {
   props: ['params'],
   data() {
     return {
+      submenuOpen: false,
       baseItems: [
         { title: 'Rename', action: () => this.$emit('editingEnabled') },
         {
@@ -61,6 +72,9 @@ export default {
     hasNoParent() {
       return !this.hasParent
     },
+    showAddToGroup() {
+      return this.hasNoParent && this.params.getHeaderGroups().length
+    },
     canSelfDelete() {
       return this.siblings.length > 1 || this.hasNoParent
     },
@@ -71,6 +85,10 @@ export default {
       return returnedItems
     },
   },
-  methods: {},
+  methods: {
+    openSubmenu() {
+      this.submenuOpen = true
+    },
+  },
 }
 </script>
