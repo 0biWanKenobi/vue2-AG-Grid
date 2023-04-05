@@ -73,8 +73,11 @@ export default {
     shouldShowMenu() {
       return (this.params.displayName ?? '') != ''
     },
+    groupId() {
+      return this.params.columnGroup.groupId
+    },
     headerGroups() {
-      return this.params.getHeaderGroups()
+      return this.params.getHeaderGroups(this.groupId)
     },
   },
   mounted() {

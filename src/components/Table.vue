@@ -136,10 +136,18 @@ export default {
       if (parent.getColGroupDef().children) return true
       return this.isChildColumn(parent)
     },
-    getHeaderGroups() {
+    getHeaderGroups(callerGroupId = null) {
       return this.colApi
         ?.getAllDisplayedColumnGroups()
-        ?.filter((cg) => cg.getColGroupDef && cg.getColGroupDef().children)
+        ?.filter((cg) => {
+          const grDef = cg.getColGroupDef?.()
+          if (!grDef) return false
+          return (
+            !!grDef.children &&
+            (!callerGroupId ||
+              (grDef.groupId != callerGroupId && grDef.children.filter((c) => c.groupId != callerGroupId).length))
+          )
+        })
         .map((cg) => ({ groupId: cg.groupId, name: cg.getColGroupDef().headerName }))
     },
     pushColumn(colName) {
