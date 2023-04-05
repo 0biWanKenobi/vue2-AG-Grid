@@ -12,20 +12,29 @@
           <v-list-item-title @click="item.action()">{{ item.title }}</v-list-item-title>
         </v-list-item>
 
-        <v-list-group no-action @click.stop :value="false">
-          <template v-slot:activator>
-            <v-list-item-content>
-              <v-list-item-title>Add to Group</v-list-item-title>
-            </v-list-item-content>
-          </template>
-          <v-list-item class="list_item" v-for="(item, i) in params.getHeaderGroups()" :key="i">
-            <v-list-item-content>
-              <v-list-item-title @click="onAddToGroup(item.groupId)">
-                {{ item.name }}
-              </v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
-        </v-list-group>
+        <v-list-item v-if="this.headerGroups.length" no-action class="list_item">
+          <v-list-item-title @click.stop="addToGroupMenuOpen = !addToGroupMenuOpen">Add to Group</v-list-item-title>
+          <v-menu v-model="addToGroupMenuOpen" :close-on-content-click="false" offset-x>
+            <template v-slot:activator="{ props }">
+              <v-list-item-action v-bind="props">
+                <v-icon>
+                  {{ addToGroupMenuOpen ? 'mdi-menu-down' : 'mdi-menu-right' }}
+                </v-icon>
+              </v-list-item-action>
+            </template>
+            <v-card>
+              <v-list dense>
+                <v-list-item class="list_item" v-for="(item, j) in headerGroups" :key="`listitem-${j}`">
+                  <v-list-item-content>
+                    <v-list-item-title @click="onAddToGroup(item.groupId)">
+                      {{ item.name }}
+                    </v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+              </v-list>
+            </v-card>
+          </v-menu>
+        </v-list-item>
       </v-list>
     </v-menu>
     <div v-if="editingLabel">
@@ -57,11 +66,15 @@ export default {
         },
         { title: 'Add Parent', action: this.openParentDialog },
       ],
+      addToGroupMenuOpen: false,
     }
   },
   computed: {
     shouldShowMenu() {
       return (this.params.displayName ?? '') != ''
+    },
+    headerGroups() {
+      return this.params.getHeaderGroups()
     },
   },
   mounted() {
