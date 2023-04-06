@@ -10,15 +10,9 @@
         <v-list-item-title @click="item.action()">{{ item.title }}</v-list-item-title>
       </v-list-item>
 
-      <v-menu
-        v-for="(subMenu, k) in subMenus"
-        v-model="subMenu.open"
-        :close-on-content-click="false"
-        offset-x
-        :key="`submenu-${k}`"
-      >
+      <v-menu v-for="(subMenu, k) in subMenus" :close-on-content-click="false" offset-x :key="`submenu-${k}`">
         <template v-slot:activator="{ value, on }">
-          <v-list-item v-on="on" v-if="subMenu.showOption" no-action class="list_item" :key="`submenu-${k}`">
+          <v-list-item v-on="on" no-action class="list_item">
             <v-list-item-title>{{ subMenu.title }}</v-list-item-title>
             <v-list-item-action>
               <v-icon>
@@ -31,7 +25,7 @@
           <v-list dense>
             <v-list-item class="list_item" v-for="(option, j) in subMenu.options" :key="`listitem-${j}`">
               <v-list-item-content>
-                <v-list-item-title @click="subMenu.itemAction(option)">
+                <v-list-item-title @click="subMenu.action(option)">
                   {{ option.name }}
                 </v-list-item-title>
               </v-list-item-content>
@@ -62,6 +56,21 @@ export default {
           action: () => this.$emit('addParent'),
         },
       ],
+      baseSubMenus: [
+        {
+          title: 'Add to Group',
+          options: this.params.getHeaderGroups(),
+          action: (group) => this.$emit('addToGroup', { groupId: group.groupId }),
+        },
+        {
+          title: 'Properties',
+          options: [
+            {
+              name: 'Sortable',
+            },
+          ],
+        },
+      ],
     }
   },
   computed: {
@@ -90,29 +99,9 @@ export default {
       return returnedItems
     },
     subMenus() {
-      return [
-        {
-          title: 'Add to Group',
-          showOption: this.showAddToGroup,
-          options: this.params.getHeaderGroups(),
-          action: () => {
-            this.subMenuOpen.addToGroup = !this.subMenuOpen.addToGroup
-          },
-          itemAction: (group) => this.$emit('addToGroup', { groupId: group.groupId }),
-        },
-        {
-          title: 'Properties',
-          showOption: true,
-          options: [
-            {
-              name: 'Sortable',
-            },
-          ],
-          action: () => {
-            this.subMenuOpen.properties = !this.subMenuOpen.properties
-          },
-        },
-      ]
+      let returnedSubMenus = this.baseSubMenus
+      if (!this.showAddToGroup) returnedSubMenus = returnedSubMenus.filter((i) => i.title != 'Add to Group')
+      return returnedSubMenus
     },
   },
 }
