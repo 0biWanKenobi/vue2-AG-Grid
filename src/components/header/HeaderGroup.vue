@@ -74,7 +74,7 @@ export default {
       return (this.params.displayName ?? '') != ''
     },
     parentInfo() {
-      return this.params.column.getParent()?.getColGroupDef() ?? {}
+      return this.params.columnGroup.getParent()?.getColGroupDef() ?? {}
     },
     siblings() {
       return this.parentInfo.children ?? []
