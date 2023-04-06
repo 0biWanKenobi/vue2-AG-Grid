@@ -78,6 +78,7 @@ export default {
       headerGroupComponent: 'CustomHeaderGroup',
       headerGroupComponentParams: {
         getHeaderGroups: this.getHeaderGroups,
+        isChildColumn: this.isChildColumn,
       },
     }
     this.defaultColDef = {
@@ -142,11 +143,7 @@ export default {
         ?.filter((cg) => {
           const grDef = cg.getColGroupDef?.()
           if (!grDef) return false
-          return (
-            !!grDef.children &&
-            (!callerGroupId ||
-              (grDef.groupId != callerGroupId && grDef.children.filter((c) => c.groupId != callerGroupId).length))
-          )
+          return !!grDef.children && (!callerGroupId || grDef.groupId != callerGroupId)
         })
         .map((cg) => ({ groupId: cg.groupId, name: cg.getColGroupDef().headerName }))
     },

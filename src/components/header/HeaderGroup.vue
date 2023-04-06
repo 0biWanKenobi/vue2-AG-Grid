@@ -58,7 +58,7 @@ export default {
       editingLabel: false,
       addingParent: false,
       tempValue: '',
-      items: [
+      baseItems: [
         { title: 'Rename', action: this.onEditingEnabled },
         {
           title: 'Delete',
@@ -73,11 +73,33 @@ export default {
     shouldShowMenu() {
       return (this.params.displayName ?? '') != ''
     },
+    parentInfo() {
+      return this.params.column.getParent()?.getColGroupDef() ?? {}
+    },
+    siblings() {
+      return this.parentInfo.children ?? []
+    },
     groupId() {
       return this.params.columnGroup.groupId
     },
+    hasParent() {
+      return this.params.isChildColumn(this.params.columnGroup)
+    },
+    hasNoParent() {
+      return !this.hasParent
+    },
+    canSelfDelete() {
+      return this.siblings.length > 1 || this.hasNoParent
+    },
     headerGroups() {
+      if (this.hasParent) return []
       return this.params.getHeaderGroups(this.groupId)
+    },
+    items() {
+      let returnedItems = this.baseItems
+      if (!this.canSelfDelete) returnedItems = returnedItems.filter((i) => i.title != 'Delete')
+      if (this.hasParent) returnedItems = returnedItems.filter((i) => i.title != 'Add Parent')
+      return returnedItems
     },
   },
   mounted() {
@@ -85,10 +107,6 @@ export default {
       .getProvidedColumnGroup()
       .addEventListener('expandedChanged', this.syncExpandButtons.bind(this))
     this.syncExpandButtons()
-
-    const parent = this.params.columnGroup.parent
-    if (!parent || parent.getColGroupDef().children?.length > 1) return
-    this.items = this.items.filter((i) => i.title != 'Delete')
   },
   methods: {
     expandOrCollapse() {
