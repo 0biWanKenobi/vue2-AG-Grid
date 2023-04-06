@@ -9,14 +9,7 @@
         <v-icon small>mdi-filter-menu-outline</v-icon>
       </v-btn>
       <div ref="eLabel" class="ag-header-cell-label" role="presentation">
-        <header-menu
-          :params="params"
-          @editingEnabled="onEditingEnabled"
-          @addNew="newColDialogOpen = true"
-          @addParent="addingParent = newColDialogOpen = true"
-          @addToGroup="onAddToParent"
-          @delete="onDelete"
-        ></header-menu>
+        <header-menu :items="items" :subMenus="subMenus"></header-menu>
         <v-text-field
           v-if="editingLabel"
           label="Header label"
@@ -54,7 +47,68 @@ export default {
       addingParent: false,
       newColDialogOpen: false,
       tempValue: '',
+      baseItems: [
+        { title: 'Rename', action: () => this.$emit('editingEnabled') },
+        {
+          title: 'Delete',
+          action: this.onDelete,
+        },
+        {
+          title: 'Add new',
+          action: () => (this.newColDialogOpen = true),
+        },
+        {
+          title: 'Add parent',
+          action: () => (this.addingParent = this.newColDialogOpen = true),
+        },
+      ],
+      baseSubMenus: [
+        {
+          title: 'Add to Group',
+          options: this.params?.getHeaderGroups(),
+          action: (group) => this.$emit('addToGroup', { groupId: group.groupId }),
+        },
+        {
+          title: 'Properties',
+          options: [
+            {
+              name: 'Sortable',
+            },
+          ],
+        },
+      ],
     }
+  },
+  computed: {
+    parentInfo() {
+      return this.params.column.getParent()?.getColGroupDef() ?? {}
+    },
+    siblings() {
+      return this.parentInfo.children ?? []
+    },
+    hasParent() {
+      return this.params.isChildColumn(this.params.column)
+    },
+    hasNoParent() {
+      return !this.hasParent
+    },
+    showAddToGroup() {
+      return this.hasNoParent && this.params.getHeaderGroups().length
+    },
+    canSelfDelete() {
+      return this.siblings.length > 1 || this.hasNoParent
+    },
+    items() {
+      let returnedItems = this.baseItems
+      if (!this.canSelfDelete) returnedItems = returnedItems.filter((i) => i.title != 'Delete')
+      if (this.hasParent) returnedItems = returnedItems.filter((i) => i.title != 'Add parent')
+      return returnedItems
+    },
+    subMenus() {
+      let returnedSubMenus = this.baseSubMenus
+      if (!this.showAddToGroup) returnedSubMenus = returnedSubMenus.filter((i) => i.title != 'Add to Group')
+      return returnedSubMenus
+    },
   },
   mounted() {
     this.params.column.addEventListener('sortChanged', this.onSortChanged)
