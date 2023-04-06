@@ -1,40 +1,44 @@
 <template>
-  <v-menu bottom left v-model="menuOpen">
+  <v-menu bottom left>
     <template v-slot:activator="{ on, attrs }">
       <v-btn icon v-bind="attrs" v-on="on">
         <v-icon>mdi-dots-vertical</v-icon>
       </v-btn>
     </template>
-    <v-list>
+    <v-list flat>
       <v-list-item class="list_item" v-for="(item, i) in items" :key="i">
         <v-list-item-title @click="item.action()">{{ item.title }}</v-list-item-title>
       </v-list-item>
 
-      <template v-for="(subMenu, k) in subMenus">
-        <v-list-item v-if="subMenu.showOption" no-action class="list_item" :key="`submenu-${k}`">
-          <v-list-item-title @click.stop="subMenu.action()">{{ subMenu.title }}</v-list-item-title>
-          <v-menu v-model="subMenu.open" :close-on-content-click="false" offset-x>
-            <template v-slot:activator="{ props }">
-              <v-list-item-action v-bind="props">
-                <v-icon>
-                  {{ subMenu.open ? 'mdi-menu-down' : 'mdi-menu-right' }}
-                </v-icon>
-              </v-list-item-action>
-            </template>
-            <v-card>
-              <v-list dense>
-                <v-list-item class="list_item" v-for="(option, j) in subMenu.options" :key="`listitem-${j}`">
-                  <v-list-item-content>
-                    <v-list-item-title @click="subMenu.itemAction(option)">
-                      {{ option.name }}
-                    </v-list-item-title>
-                  </v-list-item-content>
-                </v-list-item>
-              </v-list>
-            </v-card>
-          </v-menu>
-        </v-list-item>
-      </template>
+      <v-menu
+        v-for="(subMenu, k) in subMenus"
+        v-model="subMenu.open"
+        :close-on-content-click="false"
+        offset-x
+        :key="`submenu-${k}`"
+      >
+        <template v-slot:activator="{ value, on }">
+          <v-list-item v-on="on" v-if="subMenu.showOption" no-action class="list_item" :key="`submenu-${k}`">
+            <v-list-item-title>{{ subMenu.title }}</v-list-item-title>
+            <v-list-item-action>
+              <v-icon>
+                {{ value ? 'mdi-menu-down' : 'mdi-menu-right' }}
+              </v-icon>
+            </v-list-item-action>
+          </v-list-item>
+        </template>
+        <v-card>
+          <v-list dense>
+            <v-list-item class="list_item" v-for="(option, j) in subMenu.options" :key="`listitem-${j}`">
+              <v-list-item-content>
+                <v-list-item-title @click="subMenu.itemAction(option)">
+                  {{ option.name }}
+                </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-card>
+      </v-menu>
     </v-list>
   </v-menu>
 </template>
@@ -43,7 +47,6 @@ export default {
   props: ['params'],
   data() {
     return {
-      menuOpen: false,
       baseItems: [
         { title: 'Rename', action: () => this.$emit('editingEnabled') },
         {
@@ -59,10 +62,6 @@ export default {
           action: () => this.$emit('addParent'),
         },
       ],
-      subMenuOpen: {
-        addToGroup: false,
-        properties: false,
-      },
     }
   },
   computed: {
@@ -91,12 +90,10 @@ export default {
       return returnedItems
     },
     subMenus() {
-      const { addToGroup: addToGroupOpen, properties: propertiesOpen } = this.subMenuOpen
       return [
         {
           title: 'Add to Group',
           showOption: this.showAddToGroup,
-          open: addToGroupOpen,
           options: this.params.getHeaderGroups(),
           action: () => {
             this.subMenuOpen.addToGroup = !this.subMenuOpen.addToGroup
@@ -106,7 +103,6 @@ export default {
         {
           title: 'Properties',
           showOption: true,
-          open: propertiesOpen,
           options: [
             {
               name: 'Sortable',
@@ -117,15 +113,6 @@ export default {
           },
         },
       ]
-    },
-  },
-  watch: {
-    menuOpen(isOpen) {
-      if (isOpen) return
-      this.subMenuOpen = {
-        addToGroup: false,
-        properties: false,
-      }
     },
   },
 }
