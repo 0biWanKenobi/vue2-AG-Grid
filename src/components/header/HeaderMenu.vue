@@ -128,10 +128,5 @@ export default {
       }
     },
   },
-  methods: {
-    openSubmenu() {
-      this.submenuOpen = true
-    },
-  },
 }
 </script>
