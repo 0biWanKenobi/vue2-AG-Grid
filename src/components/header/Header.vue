@@ -48,7 +48,7 @@ export default {
       newColDialogOpen: false,
       tempValue: '',
       baseItems: [
-        { title: 'Rename', action: () => this.$emit('editingEnabled') },
+        { title: 'Rename', action: this.onEditingEnabled },
         {
           title: 'Delete',
           action: this.onDelete,
