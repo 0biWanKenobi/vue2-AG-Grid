@@ -18,10 +18,10 @@
           @keyup.stop.enter="onSaveLabel()"
         ></v-text-field>
         <span v-else role="columnheader" @click="onSortRequested($event)">{{ params.displayName }}</span>
-        <div v-if="params.enableSorting && showDescSort">
+        <div v-if="params.column.sort == 'desc'">
           <v-icon small>mdi-arrow-down</v-icon>
         </div>
-        <div v-if="params.enableSorting && showAscSort">
+        <div v-if="params.column.sort == 'asc'">
           <v-icon small>mdi-arrow-up</v-icon>
         </div>
       </div>
@@ -41,8 +41,6 @@ export default {
   },
   data() {
     return {
-      showAscSort: false,
-      showDescSort: false,
       editingLabel: false,
       addingParent: false,
       newColDialogOpen: false,
@@ -62,21 +60,14 @@ export default {
           action: () => (this.addingParent = this.newColDialogOpen = true),
         },
       ],
-      baseSubMenus: [
-        {
-          title: 'Properties',
-          options: [
-            {
-              name: 'Sortable',
-            },
-          ],
-        },
-      ],
     }
   },
   computed: {
     parentInfo() {
       return this.params.column.getParent()?.getColGroupDef() ?? {}
+    },
+    colDef() {
+      return this.params.column.getColDef()
     },
     siblings() {
       return this.parentInfo.children ?? []
@@ -103,6 +94,20 @@ export default {
       if (this.hasParent) returnedItems = returnedItems.filter((i) => i.title != 'Add parent')
       return returnedItems
     },
+    baseSubMenus() {
+      return [
+        {
+          title: 'Properties',
+          options: [
+            {
+              name: ` ${this.colDef.sortable == false ? 'Enable' : 'Disable'} Sortable`,
+              action: () => commit('table/TOGGLE_SORTABLE', { colId: this.params.column.getColId() }),
+            },
+          ],
+          action: (option) => option.action(),
+        },
+      ]
+    },
     subMenus() {
       const returnedSubMenus = this.baseSubMenus
       if (this.showAddToGroup) {
@@ -115,10 +120,6 @@ export default {
       }
       return returnedSubMenus
     },
-  },
-  mounted() {
-    this.params.column.addEventListener('sortChanged', this.onSortChanged)
-    this.onSortChanged()
   },
   methods: {
     onMenuClicked() {
@@ -154,20 +155,11 @@ export default {
         })
       } else commit('table/ADD_COLUMN', { colId: this.params.column.getColId(), name: newColName })
     },
-    onSortChanged() {
-      if (this.params.column.isSortAscending()) {
-        this.showAscSort = true
-        this.showDescSort = false
-      } else if (this.params.column.isSortDescending()) {
-        this.showDescSort = true
-        this.showAscSort = false
-      } else {
-        this.showDescSort = false
-        this.showAscSort = false
-      }
-    },
-
     onSortRequested(event) {
+      if (this.colDef.sortable == false) {
+        console.log('sorting disabled')
+        return
+      }
       let order = ''
       if (this.params.column.isSortAscending()) order = 'desc'
       else if (this.params.column.isSortDescending()) order = ''

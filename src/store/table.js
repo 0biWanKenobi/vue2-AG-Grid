@@ -78,6 +78,13 @@ export default {
       // when deleting renamed headers
       state.columnDefs = mapHeaderSet(state.gridApi.getColumnDefs())
     },
+    TOGGLE_SORTABLE(state, { colId }) {
+      const col = state.gridApi.getColumnDef(colId)
+      col.sortable = col.sortable == false ? true : false
+      // sync defs in gridApi and in component, prevent issues
+      // when deleting renamed headers
+      state.columnDefs = mapHeaderSet(state.gridApi.getColumnDefs())
+    },
     RENAME_GROUP(state, { newName, group }) {
       console.log('renaming group')
       const groupDef = group.getColGroupDef()
