@@ -1,6 +1,6 @@
 <template>
   <v-menu bottom left>
-    <template v-slot:activator="{ on, attrs }">
+    <template #activator="{ on, attrs }">
       <v-btn icon v-bind="attrs" v-on="on">
         <v-icon>mdi-dots-vertical</v-icon>
       </v-btn>
@@ -11,7 +11,7 @@
       </v-list-item>
 
       <v-menu v-for="(subMenu, k) in subMenus" :close-on-content-click="false" offset-x :key="`submenu-${k}`">
-        <template v-slot:activator="{ value, on }">
+        <template #activator="{ value, on }">
           <v-list-item v-on="on" no-action class="list_item">
             <v-list-item-title>{{ subMenu.title }}</v-list-item-title>
             <v-list-item-action>

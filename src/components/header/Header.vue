@@ -64,11 +64,6 @@ export default {
       ],
       baseSubMenus: [
         {
-          title: 'Add to Group',
-          options: this.params?.getHeaderGroups(),
-          action: (group) => this.$emit('addToGroup', { groupId: group.groupId }),
-        },
-        {
           title: 'Properties',
           options: [
             {
@@ -93,10 +88,14 @@ export default {
       return !this.hasParent
     },
     showAddToGroup() {
-      return this.hasNoParent && this.params.getHeaderGroups().length
+      return this.hasNoParent && this.headerGroups.length
     },
     canSelfDelete() {
       return this.siblings.length > 1 || this.hasNoParent
+    },
+    headerGroups() {
+      if (this.hasParent) return []
+      return this.params.getHeaderGroups()
     },
     items() {
       let returnedItems = this.baseItems
@@ -105,8 +104,15 @@ export default {
       return returnedItems
     },
     subMenus() {
-      let returnedSubMenus = this.baseSubMenus
-      if (!this.showAddToGroup) returnedSubMenus = returnedSubMenus.filter((i) => i.title != 'Add to Group')
+      const returnedSubMenus = this.baseSubMenus
+      if (this.showAddToGroup) {
+        const addToGroupOpt = {
+          title: 'Add to Group',
+          options: this.headerGroups,
+          action: (group) => this.onAddToParent({ groupId: group.groupId }),
+        }
+        returnedSubMenus.splice(0, 0, addToGroupOpt)
+      }
       return returnedSubMenus
     },
   },
