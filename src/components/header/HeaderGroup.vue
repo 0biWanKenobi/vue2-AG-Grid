@@ -114,7 +114,7 @@ export default {
       if (groupParent) commit('table/DELETE_CHILD_GROUP', this.params.columnGroup.groupId)
       else commit('table/DELETE_GROUP', this.params.columnGroup.groupId)
     },
-    onAddToGroup(groupId) {
+    onAddToGroup({ groupId }) {
       commit('table/ADD_GROUP_TO_GROUP', { destGroupId: groupId, group: this.params.columnGroup })
     },
   },
