@@ -17,11 +17,17 @@
           @keydown.stop
           @keyup.stop.enter="onSaveLabel()"
         ></v-text-field>
-        <span v-else role="columnheader" @click="onSortRequested($event)">{{ params.displayName }}</span>
-        <div v-if="params.column.sort == 'desc'">
+        <span
+          :class="{ 'cursor-pointer': colDef.sortable != false }"
+          v-else
+          role="columnheader"
+          @click="onSortRequested($event)"
+          >{{ params.displayName }}</span
+        >
+        <div v-if="sort == 'desc'">
           <v-icon small>mdi-arrow-down</v-icon>
         </div>
-        <div v-if="params.column.sort == 'asc'">
+        <div v-if="sort == 'asc'">
           <v-icon small>mdi-arrow-up</v-icon>
         </div>
       </div>
@@ -45,6 +51,7 @@ export default {
       addingParent: false,
       newColDialogOpen: false,
       tempValue: '',
+      sort: '',
       baseItems: [
         { title: 'Rename', action: this.onEditingEnabled },
         {
@@ -69,8 +76,8 @@ export default {
     colDef() {
       return this.params.column.getColDef()
     },
-    siblings() {
-      return this.parentInfo.children ?? []
+    siblingsCount() {
+      return this.parentInfo.children?.length ?? 0
     },
     hasParent() {
       return this.params.isChildColumn(this.params.column)
@@ -82,7 +89,7 @@ export default {
       return this.hasNoParent && this.headerGroups.length
     },
     canSelfDelete() {
-      return this.siblings.length > 1 || this.hasNoParent
+      return this.siblingsCount > 1 || this.hasNoParent
     },
     headerGroups() {
       if (this.hasParent) return []
@@ -160,14 +167,14 @@ export default {
         console.log('sorting disabled')
         return
       }
-      let order = ''
-      if (this.params.column.isSortAscending()) order = 'desc'
-      else if (this.params.column.isSortDescending()) order = ''
-      else order = 'asc'
 
-      console.log('order is "' + order + '"')
+      if (this.params.column.isSortAscending()) this.sort = 'desc'
+      else if (this.params.column.isSortDescending()) this.sort = ''
+      else this.sort = 'asc'
 
-      this.params.setSort(order, event.shiftKey)
+      console.log('order is "' + this.sort + '"')
+
+      this.params.setSort(this.sort, event.shiftKey)
     },
     // refresh(params) {
     //   console.log(params)
@@ -177,7 +184,8 @@ export default {
 }
 </script>
 <style>
-.list_item {
+.list_item,
+.cursor-pointer {
   cursor: pointer;
 }
 .customHeaderMenuButton {

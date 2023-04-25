@@ -83,7 +83,7 @@ export default {
       col.sortable = col.sortable == false ? true : false
       // sync defs in gridApi and in component, prevent issues
       // when deleting renamed headers
-      state.columnDefs = mapHeaderSet(state.gridApi.getColumnDefs())
+      this.commit('table/SYNC_COLUMNS')
     },
     RENAME_GROUP(state, { newName, group }) {
       console.log('renaming group')
